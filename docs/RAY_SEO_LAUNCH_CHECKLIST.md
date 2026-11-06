@@ -5,9 +5,10 @@ Use this list before and immediately after deploying the RAY SEO Analyser.
 ## 1. Environment configuration
 
 - [ ] `DATABASE_URL` set and reachable from the deployment host.
-- [ ] `SEO_REPORT_ENC_KEY` — 32-byte key (hex or base64) for AES-256-GCM
+- [ ] `CONTACT_ENCRYPTION_KEY` — 32-byte key (hex or base64) for AES-256-GCM
   encryption of contact data. Never commit it.
-- [ ] `SEO_TOKEN_HASH_SECRET` — secret salt for report token hashing.
+- [ ] `SEO_HASH_SALT` — secret salt for contact hashing (falls back to
+  `CONTACT_IP_SALT` when unset).
 - [ ] `CONTACT_IP_SALT` — salt for IP hashing (shared with contact form).
 - [ ] `RESEND_API_KEY` — Resend API key for report email.
 - [ ] `SEO_REPORT_FROM_EMAIL` — verified sender (e.g. `reports@wemray.com`).
@@ -15,7 +16,8 @@ Use this list before and immediately after deploying the RAY SEO Analyser.
 - [ ] `PAGESPEED_API_KEY` — Google PageSpeed Insights key (optional; performance
   section reports "not assessed" when absent).
 - [ ] `NEXT_PUBLIC_SITE_URL` — canonical site URL (used in links/emails).
-- [ ] `SEO_ASYNC_MODE` — `true` on a persistent Node host, `false` on serverless.
+- [ ] `ENABLE_INLINE_AUDIT_JOBS` — `true` on a persistent Node host, unset or
+  `false` on serverless.
 
 ## 2. Database
 

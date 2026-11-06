@@ -93,8 +93,8 @@ create table if not exists seo_audit_contacts (
     references seo_audits(id) on delete cascade,
   email_encrypted text not null,
   email_hash text not null,
-  phone_encrypted text not null,
-  phone_hash text not null,
+  first_name_encrypted text not null,
+  first_name_hash text not null,
   created_at timestamptz not null default now(),
   retention_until timestamptz not null
 );

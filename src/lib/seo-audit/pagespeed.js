@@ -3,8 +3,9 @@ import { getSeoConfig } from './config';
 
 const ENDPOINT = 'https://www.googleapis.com/pagespeedonline/v5/runPagespeed';
 // PageSpeed runs a full Lighthouse pass on Google's side. A cold run regularly
-// takes 30-60s, so allow generous headroom.
-const TIMEOUT_MS = 60_000;
+// takes 30-60s, so allow generous headroom while staying inside the audit
+// route's 60s serverless budget (12s page fetch + 45s PageSpeed + DB writes).
+const TIMEOUT_MS = 45_000;
 const MAX_BYTES = 8 * 1024 * 1024;
 
 /**

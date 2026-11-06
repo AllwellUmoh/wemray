@@ -6,6 +6,7 @@ import { countRecentAudits, createAudit, processAudit } from '../../../../lib/se
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 const MAX_BODY_BYTES = 16_000;
 

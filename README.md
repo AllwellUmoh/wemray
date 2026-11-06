@@ -32,7 +32,13 @@ marketing site, contact enquiries, and a passwordless admin area.
 
    Required production values: `DATABASE_URL`, `BETTER_AUTH_SECRET`,
    `ADMIN_EMAIL`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`,
-   `CONTACT_NOTIFICATION_EMAIL`, `CONTACT_IP_SALT`, `NEXT_PUBLIC_SITE_URL`.
+   `CONTACT_NOTIFICATION_EMAIL`, `CONTACT_IP_SALT`, `NEXT_PUBLIC_SITE_URL`,
+   `CONTACT_ENCRYPTION_KEY`.
+
+   The app reads the plain `DATABASE_URL` name. Neon/Vercel integration
+   variables that are prefixed (for example `wemray_DATABASE_URL`) are not
+   used, so make sure a `DATABASE_URL` value exists for the deployed
+   environment.
 
 2. Install dependencies:
 
@@ -45,6 +51,7 @@ marketing site, contact enquiries, and a passwordless admin area.
    ```bash
    psql "$DATABASE_URL" -f db/contact.sql
    psql "$DATABASE_URL" -f db/auth.sql
+   psql "$DATABASE_URL" -f db/seo-analyzer.sql
    ```
 
 4. Start the development server:
