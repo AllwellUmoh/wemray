@@ -246,8 +246,22 @@ export function ServiceDetailApproachSection({ service }) {
   );
 }
 
-export function ServiceDetailCtaSection({ ctas }) {
-  const primary = ctas?.[0];
+export function ServiceDetailCtaSection({ service }) {
+  const primary = service?.ctas?.[0];
+
+  if (service?.slug === 'seo') {
+    return (
+      <CTASection
+        primaryHref={primary?.href}
+        cardOneTitle="Take the SEO Analysis"
+        cardOneCopy="Run a free, evidence-backed audit of a page and get clear, prioritised fixes."
+        cardOneHref="/tools/ray-seo-analyser"
+        cardTwoTitle="Contact us"
+        cardTwoCopy="Tell us about your website and search goals, and we will help you plan the next step."
+        cardTwoHref="/contact?service=seo"
+      />
+    );
+  }
 
   return (
     <CTASection
@@ -262,15 +276,13 @@ export function ServiceDetailCtaSection({ ctas }) {
 }
 
 export default function ServiceDetailSections({ service }) {
-  const { ctas } = service;
-
   return (
     <>
       <ServiceDetailHeroSection service={service} />
       <ServiceDetailWhySection service={service} />
       <ServiceDetailCreateSection service={service} />
       <ServiceDetailApproachSection service={service} />
-      <ServiceDetailCtaSection ctas={ctas} />
+      <ServiceDetailCtaSection service={service} />
     </>
   );
 }

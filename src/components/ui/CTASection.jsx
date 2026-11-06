@@ -15,6 +15,7 @@ export default function CTASection({
   ),
   copy = 'Whether you have an idea to build or a process to improve, we choose technology for what it does for you, and plan for security, stability, and growth from day one.',
   primaryHref = 'contact.html',
+  cardOneHref = primaryHref,
   cardOneTitle = 'Start a conversation',
   cardOneCopy = 'Tell us what you want to build or improve, and we will help you find the right starting point.',
   cardTwoTitle = 'See our work',
@@ -30,7 +31,7 @@ export default function CTASection({
           <p>{copy}</p>
         </div>
         <div className="ctc" id="ctv">
-          <AppLink className="cc main" href={primaryHref}>
+          <AppLink className="cc main" href={cardOneHref}>
             <span className="ci" id="ci1" />
             <div>
               <h3>{cardOneTitle}</h3>
