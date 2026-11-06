@@ -1,3 +1,5 @@
+'use client';
+
 import { useMemo, useState } from 'react';
 import Button from '../ui/Button';
 import CourseCard from './CourseCard';

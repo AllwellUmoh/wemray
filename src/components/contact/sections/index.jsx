@@ -2,6 +2,7 @@ import AppLink from '../../ui/AppLink';
 import Button from '../../ui/Button';
 import CTASection from '../../ui/CTASection';
 import SocialLinks from '../../ui/SocialLinks';
+import ContactForm from '../ContactForm';
 import { contactFaqs } from '../../../data/faqs';
 
 export function ContactHeroSection() {
@@ -22,7 +23,7 @@ export function ContactHeroSection() {
   );
 }
 
-export function ContactFormSection() {
+export function ContactFormSection({ defaults }) {
   return (
     <section className="ct-s" id="form">
       <div className="ct-grid">
@@ -44,24 +45,7 @@ export function ContactFormSection() {
           </div> */}
         </div>
         <div className="ct-r">
-          <form className="ct-form" id="ctForm" noValidate>
-            <i className="dots" />
-            <div className="row2">
-              <label className="fld"><input name="name" type="text" placeholder=" " autoComplete="name" required /><span>Full name <em>*</em></span><small className="err">Please tell us your name.</small></label>
-              <label className="fld"><input name="email" type="email" placeholder=" " autoComplete="email" required /><span>Email address <em>*</em></span><small className="err">Please enter a valid email address.</small></label>
-            </div>
-            <div className="row2">
-              <label className="fld"><input name="org" type="text" placeholder=" " autoComplete="organization" /><span>Organisation <i>Optional</i></span></label>
-              <label className="fld"><input name="budget" type="text" placeholder=" " /><span>Estimated budget <i>Optional</i></span></label>
-            </div>
-            <label className="fld sel"><select name="service" required><option value selected disabled hidden /><option>Corporate &amp; Event Branding</option><option>Website Development</option><option>SaaS Product Development</option><option>Mobile App Development</option><option>Custom Software &amp; Business Systems</option><option>AI Solutions &amp; Intelligent Agents</option><option>Workflow Automation</option><option>SEO</option><option>Ray Academy Training</option><option>Other / Multiple Services</option></select><span>Service of interest</span><svg className="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></label>
-            <label className="fld ta"><textarea name="details" rows={5} placeholder=" " defaultValue={""} /><span>Project details</span></label>
-            <div className="ct-act">
-              <Button variant="pur" type="submit" data-intent="conversation" arrow>Start a Conversation</Button>
-              <Button variant="line" type="submit" data-intent="consultation" arrow>Book a Consultation</Button>
-            </div>
-            <p className="ct-note">Your message opens in your email app, addressed to hello@wemray.com.</p>
-          </form>
+          <ContactForm defaults={defaults} />
         </div>
       </div>
     </section>
@@ -117,11 +101,11 @@ export function ContactCtaSection() {
   );
 }
 
-export default function ContactSections() {
+export default function ContactSections({ defaults }) {
   return (
     <>
       <ContactHeroSection />
-      <ContactFormSection />
+      <ContactFormSection defaults={defaults} />
       <ContactCtaSection />
       <ContactFaqSection />
     </>

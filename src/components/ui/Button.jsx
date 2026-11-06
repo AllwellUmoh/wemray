@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 import AppLink from './AppLink';
 
 const ALIASES = {
@@ -60,7 +60,7 @@ export default function Button({
 
   if (to) {
     return (
-      <Link className={classes} to={to} {...rest}>
+      <Link className={classes} href={to} {...rest}>
         {content}
       </Link>
     );

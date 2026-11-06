@@ -1,5 +1,7 @@
+'use client';
+
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import { initBlueprint } from './blueprint.js';
 import { IC, ICO } from './icons.js';
 
@@ -56,48 +58,56 @@ function initNav(signal) {
   return () => setOpen(false);
 }
 
-function initMega(signal) {
-  const item = document.querySelector('.has-mega');
-  if (!item) return;
-  const trigger = item.querySelector('a');
-  let timer;
+function initMenus(signal) {
+  const items = document.querySelectorAll('.has-mega');
+  if (!items.length) return;
 
-  const open = () => {
-    clearTimeout(timer);
-    item.classList.add('open');
-    trigger.setAttribute('aria-expanded', 'true');
-  };
+  const controllers = [];
 
-  const shut = () => {
-    clearTimeout(timer);
-    item.classList.remove('open');
-    trigger.setAttribute('aria-expanded', 'false');
-  };
+  items.forEach((item) => {
+    const trigger = item.querySelector('a');
+    if (!trigger) return;
+    let timer;
 
-  item.addEventListener('mouseenter', open, { signal });
-  item.addEventListener(
-    'mouseleave',
-    () => {
-      timer = setTimeout(shut, 140);
-    },
-    { signal },
-  );
+    const open = () => {
+      clearTimeout(timer);
+      item.classList.add('open');
+      trigger.setAttribute('aria-expanded', 'true');
+    };
 
-  trigger.addEventListener(
-    'click',
-    (event) => {
-      if (matchMedia('(hover:none)').matches && !item.classList.contains('open')) {
-        event.preventDefault();
-        open();
-      }
-    },
-    { signal },
-  );
+    const shut = () => {
+      clearTimeout(timer);
+      item.classList.remove('open');
+      trigger.setAttribute('aria-expanded', 'false');
+    };
+
+    item.addEventListener('mouseenter', open, { signal });
+    item.addEventListener(
+      'mouseleave',
+      () => {
+        timer = setTimeout(shut, 140);
+      },
+      { signal },
+    );
+
+    trigger.addEventListener(
+      'click',
+      (event) => {
+        if (matchMedia('(hover:none)').matches && !item.classList.contains('open')) {
+          event.preventDefault();
+          open();
+        }
+      },
+      { signal },
+    );
+
+    controllers.push({ item, shut, clear: () => clearTimeout(timer) });
+  });
 
   document.addEventListener(
     'keydown',
     (event) => {
-      if (event.key === 'Escape') shut();
+      if (event.key === 'Escape') controllers.forEach((controller) => controller.shut());
     },
     { signal },
   );
@@ -105,13 +115,21 @@ function initMega(signal) {
   document.addEventListener(
     'click',
     (event) => {
-      if (!item.contains(event.target)) shut();
+      controllers.forEach((controller) => {
+        if (!controller.item.contains(event.target)) controller.shut();
+      });
     },
     { signal },
   );
 
-  addEventListener('scroll', shut, { passive: true, signal });
-  signal.addEventListener('abort', () => clearTimeout(timer));
+  addEventListener(
+    'scroll',
+    () => controllers.forEach((controller) => controller.shut()),
+    { passive: true, signal },
+  );
+  signal.addEventListener('abort', () =>
+    controllers.forEach((controller) => controller.clear()),
+  );
 }
 
 function initActiveNav(pathname) {
@@ -119,7 +137,9 @@ function initActiveNav(pathname) {
   document.querySelectorAll('#nav > ul > li > a').forEach((link) => {
     const href = link.getAttribute('href');
     const active =
-      href === normalized || (href === '/services' && normalized.startsWith('/services/'));
+      href === normalized ||
+      (href === '/services' && normalized.startsWith('/services/')) ||
+      (href === '/tools/ray-seo-analyser' && normalized.startsWith('/tools'));
     link.classList.toggle('cur', active);
   });
 }
@@ -202,14 +222,14 @@ function initReveal() {
 }
 
 export default function useSiteEffects() {
-  const { pathname } = useLocation();
+  const pathname = usePathname();
 
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
 
     const cleanupNav = initNav(signal);
-    initMega(signal);
+    initMenus(signal);
     initActiveNav(pathname);
     initIcons(pathname);
 

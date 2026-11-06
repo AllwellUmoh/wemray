@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 const serviceRoutes = {
   'service-ai.html': '/services/ai',
@@ -50,7 +50,7 @@ export default function AppLink({ href, to, children, ...rest }) {
 
   if (target && target.startsWith('/') && !target.startsWith('//')) {
     return (
-      <Link to={target} {...rest}>
+      <Link href={target} {...rest}>
         {children}
       </Link>
     );
@@ -60,7 +60,7 @@ export default function AppLink({ href, to, children, ...rest }) {
 
   if (route) {
     return (
-      <Link to={route} {...rest}>
+      <Link href={route} {...rest}>
         {children}
       </Link>
     );

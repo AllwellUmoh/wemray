@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import threeWaysImage from '../assets/three-ways-intelligence.svg';
 import { PROJECTS } from '../components/home/portfolioData';
 
 const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
@@ -27,7 +26,7 @@ const WAYS = [
 const WAY_IMAGES = [
   U('photo-1558655146-9f40138edfeb'),
   U('photo-1517694712202-14dd9538aa97'),
-  threeWaysImage,
+  '/images/three-ways-intelligence.svg',
 ];
 
 const WAY_GRADIENTS = [

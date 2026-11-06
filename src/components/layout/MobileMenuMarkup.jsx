@@ -41,6 +41,17 @@ export default function MobileMenuMarkup() {
           {link.label}
         </AppLink>
       ))}
+      <details className="mm-sv mm-tools">
+        <summary>
+          Tools
+          <svg className="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </summary>
+        <div>
+          <AppLink to="/tools/ray-seo-analyser">RAY SEO Analyser</AppLink>
+        </div>
+      </details>
       <Button to="/contact" variant="pur">
         Start a Conversation
       </Button>

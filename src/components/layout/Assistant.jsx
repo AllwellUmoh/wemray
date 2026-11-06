@@ -1,6 +1,8 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { usePathname } from 'next/navigation';
 import AppLink from '../ui/AppLink';
 import { createSession, openingMessage, respond } from '../../lib/assistant';
 
@@ -9,7 +11,7 @@ let seq = 0;
 const uid = () => `m${(seq += 1)}`;
 
 export default function Assistant() {
-  const { pathname } = useLocation();
+  const pathname = usePathname();
   const session = useRef(createSession());
   const timers = useRef([]);
   const inputRef = useRef(null);

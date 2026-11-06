@@ -1,6 +1,7 @@
+'use client';
+
 import { useEffect, useRef, useState } from 'react';
 import AppLink from '../../ui/AppLink';
-import threeWaysImage from '../../../assets/three-ways-intelligence.svg';
 
 const U = (id) => `/images/${id}.jpg`;
 
@@ -25,7 +26,7 @@ const WAYS = [
 const IMAGES = [
   U('photo-1558655146-9f40138edfeb'),
   U('photo-1517694712202-14dd9538aa97'),
-  threeWaysImage,
+  '/images/three-ways-intelligence.svg',
 ];
 
 const GRADIENTS = [

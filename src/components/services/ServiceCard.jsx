@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 const gradients = [
   ['#6a3df0', '#2a14a8'],
@@ -20,7 +20,7 @@ export default function ServiceCard({ service, index }) {
   return (
     <Link
       className="mc svc"
-      to={href}
+      href={href}
       data-i={index}
       draggable={false}
       aria-label={`Explore ${service.name}`}
