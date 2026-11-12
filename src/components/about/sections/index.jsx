@@ -8,7 +8,6 @@ export function AboutHeroSection() {
     <section className="hero ah ab-h" id="top">
       <div className="hero-bg" aria-hidden="true"><div className="bl l0 on" /><div className="ov" /><div className="gr" /><div className="pxf" id="pxHero" /><div className="orb o1" /><div className="orb o2" /></div>
       <div className="hero-txt">
-        <div className="eb"><span className="pd" />About Wemray</div>
         <h1 id="hTitle" aria-label="Technology with Purpose. Progress That Lasts."><span className="ln"><i>Technology</i></span><span className="ln"><i>with Purpose.</i></span><span className="ln"><i><span className="fw">Progress That Lasts.</span></i><svg className="ul" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength={1} d="M4 16C80 4 150 22 220 12S340 6 396 14" /></svg></span></h1>
         <p className="sub">We bring strategy, creativity, and technology together for businesses in Port Harcourt, Lagos, Nigeria, London, the UK and Canada.</p>
         <div className="ctas">

@@ -7,7 +7,7 @@ import MobileMenuMarkup from '../layout/MobileMenuMarkup';
 import ScrollToTop from '../layout/ScrollToTop';
 import useSiteEffects from '../../lib/useSiteEffects';
 
-export default function SiteShell({ children }) {
+export default function SiteShell({ children, academyCourses = [], academyTracks = [] }) {
   useSiteEffects();
 
   return (
@@ -17,7 +17,7 @@ export default function SiteShell({ children }) {
       <ScrollToTop />
       {children}
       <FooterMarkup />
-      <Assistant />
+      <Assistant courses={academyCourses} tracks={academyTracks} />
     </>
   );
 }

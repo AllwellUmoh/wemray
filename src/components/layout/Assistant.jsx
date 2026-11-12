@@ -1,18 +1,22 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import AppLink from '../ui/AppLink';
-import { createSession, openingMessage, respond } from '../../lib/assistant';
+import { createEngine } from '../../lib/assistant';
 
 const NUDGE_KEY = 'wemray.assistant.nudge';
 let seq = 0;
 const uid = () => `m${(seq += 1)}`;
 
-export default function Assistant() {
+export default function Assistant({ courses = [], tracks = [] }) {
   const pathname = usePathname();
-  const session = useRef(createSession());
+
+  // Built once per catalogue payload. The engine is pure — the mutable
+  // conversation state lives in `session`.
+  const engine = useMemo(() => createEngine({ courses, tracks }), [courses, tracks]);
+  const session = useRef(engine.createSession());
   const timers = useRef([]);
   const inputRef = useRef(null);
   const messagesRef = useRef(null);
@@ -62,7 +66,7 @@ export default function Assistant() {
   const greet = () => {
     setBusy(true);
     later(() => {
-      setMessages([{ id: uid(), who: 'bot', text: openingMessage(pathname) }]);
+      setMessages([{ id: uid(), who: 'bot', text: engine.openingMessage(pathname) }]);
       setBusy(false);
       setChips(['What do you do?', 'Start a project', 'Ray Academy', 'Talk to a human']);
     }, 520);
@@ -77,7 +81,7 @@ export default function Assistant() {
 
   const reset = () => {
     clearTimers();
-    session.current = createSession();
+    session.current = engine.createSession();
     setMessages([]);
     setChips([]);
     setInput('');
@@ -88,7 +92,7 @@ export default function Assistant() {
   const send = (value) => {
     const text = String(value || '').trim();
     if (!text || busy) return;
-    const reply = respond(session.current, text);
+    const reply = engine.respond(session.current, text);
     setInput('');
     setChips([]);
     setBusy(true);

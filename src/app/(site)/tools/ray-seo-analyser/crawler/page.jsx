@@ -23,7 +23,6 @@ export default function CrawlerPage() {
           <span>Crawler</span>
         </nav>
         <div className="ray-crawler-in">
-          <span className="eb"><span className="pd" /> Transparency</span>
           <h1>About the RAY SEO Analyser crawler.</h1>
           <p className="ray-lede">
             When you run an audit, our crawler fetches the single page you submit, reads

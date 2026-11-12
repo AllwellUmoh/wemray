@@ -8,7 +8,7 @@ import {
   webPageSchema,
 } from '../../../lib/seo';
 import { contactFaqs } from '../../../data/faqs';
-import { courses } from '../../../data/courses';
+import { getCourseBySlug } from '../../../lib/academy/courses';
 import { SERVICE_VALUES } from '../../../lib/contact-options';
 
 const title = 'Contact Wemray Technology | Port Harcourt, Nigeria & Global';
@@ -27,10 +27,20 @@ export default async function ContactPage({ searchParams }) {
   const params = await searchParams;
   const serviceSlug = typeof params?.service === 'string' ? params.service : '';
   const courseSlug = typeof params?.course === 'string' ? params.course : '';
-  const course = courses.find((item) => item.slug === courseSlug);
+
+  // Courses live in the database now, so resolve the slug defensively —
+  // a stale link should still render the page rather than throw.
+  let course = null;
+  if (courseSlug) {
+    try {
+      course = await getCourseBySlug(courseSlug);
+    } catch (error) {
+      console.error('Contact page could not resolve course', error);
+    }
+  }
 
   const defaults = {
-    service: SERVICE_VALUES[serviceSlug] || '',
+    service: SERVICE_VALUES[serviceSlug] || (course ? SERVICE_VALUES.academy : ''),
     details: course ? `Course of interest: ${course.title} (${course.track})` : '',
   };
 

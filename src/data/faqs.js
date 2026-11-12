@@ -25,7 +25,7 @@ export const contactFaqs = [
   },
   {
     q: 'What courses does Ray Academy offer?',
-    a: 'Frontend, backend, and full-stack development, product design, corporate branding and design, social media management, WordPress, and data analytics.',
+    a: 'Frontend, backend, and full-stack development, product design, corporate branding and design, social media management, WordPress, data analytics, and Introduction to AI.',
   },
   {
     q: 'How do I find out about training fees and dates?',
@@ -48,7 +48,7 @@ export const academyFaqs = [
   },
   {
     q: 'What courses does Ray Academy offer?',
-    a: 'Frontend, backend, and full-stack development, product design, corporate branding and design, social media management, WordPress, and data analytics.',
+    a: 'Frontend, backend, and full-stack development, product design, corporate branding and design, social media management, WordPress, data analytics, and Introduction to AI.',
   },
   {
     q: 'How do I find out about training fees and dates?',

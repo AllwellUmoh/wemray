@@ -9,7 +9,6 @@ const mosaic = projects.slice(0, 5);
 export function PortfolioHeroSection() {
   return (
     <PageHero
-      eyebrow="Our Work"
       lines={[
         { t: 'Ideas Made Tangible.' },
         { t: 'Work Made to Matter.', fw: true },

@@ -7,7 +7,6 @@ export function ServicesHeroSection() {
     <section className="hero ah sv-h" id="top">
       <div className="hero-bg" aria-hidden="true"><div className="bl l1 on" /><div className="ov" /><div className="gr" /><div className="pxf" id="pxHero" /><div className="orb o1" /><div className="orb o2" /></div>
       <div className="hero-txt">
-        <div className="eb"><span className="pd" />Our Services</div>
         <h1 id="hTitle" aria-label="Solutions Built Around You. Engineered to Grow with You."><span className="ln"><i>Solutions Built</i></span><span className="ln"><i>Around You.</i></span><span className="ln"><i><span className="fw">Engineered to Grow</span></i></span><span className="ln"><i><span className="fw">with You.</span></i><svg className="ul" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength={1} d="M4 16C80 4 150 22 220 12S340 6 396 14" /></svg></span></h1>
         <p className="sub">From a focused project to full-scale transformation, we assemble the right capabilities for businesses in Port Harcourt, Lagos, Nigeria, London, the UK and Canada.</p>
         <div className="ctas">

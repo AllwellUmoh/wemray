@@ -1,13 +1,26 @@
-import { courses, tracks } from '../data/courses';
 import { services } from '../data/services';
 
 /* ------------------------------------------------------------------ *
  * Ray — the Wemray assistant.
  * A small local conversation engine: intents, memory and two guided
  * flows (project intake, course matching). No backend required.
+ *
+ * Course data is injected rather than imported, so the academy catalogue
+ * has exactly one source of truth: the database. A client component
+ * fetches it on the server and passes it into createEngine(); pages that
+ * do not load courses simply get an engine with an empty catalogue, which
+ * falls back to the track list in ACADEMY_TRACKS below.
  * ------------------------------------------------------------------ */
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+/** Fallback tracks — only used when no course data was injected. */
+const ACADEMY_TRACKS = [
+  { key: 'sw', label: 'Software Development' },
+  { key: 'ds', label: 'Design & Creative Skills' },
+  { key: 'dm', label: 'Marketing & Website Management' },
+  { key: 'da', label: 'Data Analytics' },
+];
 
 const SERVICE_ALIASES = {
   branding: ['brand', 'branding', 'logo', 'identity', 'rebrand', 'event branding', 'stationery'],
@@ -62,9 +75,6 @@ function detectTrack(value) {
 
 const getService = (slug) => services.find((service) => service.slug === slug);
 const serviceLabel = (slug) => getService(slug)?.name ?? 'Project';
-const trackLabel = (key) => tracks.find((track) => track.key === key)?.label ?? 'that track';
-const trackCourses = (key) => courses.filter((course) => course.trackKey === key);
-
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 const out = (text, chips = [], links = [], items = []) => ({
@@ -77,28 +87,6 @@ const out = (text, chips = [], links = [], items = []) => ({
   ],
   chips,
 });
-
-export function createSession() {
-  return { turn: 0, topic: null, flow: null, slots: {} };
-}
-
-export function openingMessage(pathname = '/') {
-  const hour = new Date().getHours();
-  const part = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
-  if (pathname.startsWith('/academy')) {
-    return `${part} — I'm Ray, the Wemray assistant. You're on the Ray Academy page, so ask me about tracks, courses or training.`;
-  }
-  if (pathname.startsWith('/services')) {
-    return `${part} — I'm Ray. You're on our services pages, so ask me how we handle the work you're looking at.`;
-  }
-  if (pathname.startsWith('/portfolio')) {
-    return `${part} — I'm Ray. You're looking at our work, so ask me about any project here.`;
-  }
-  if (pathname.startsWith('/contact')) {
-    return `${part} — I'm Ray. If the form feels like a lot, tell me what you need and I'll take the first details.`;
-  }
-  return `${part} — I'm Ray, the Wemray assistant. Ask me about our services, Ray Academy, pricing, or how to start a project.`;
-}
 
 const defaultChips = (session) => {
   if (session.topic?.type === 'service') {
@@ -136,6 +124,8 @@ const isStart = (n) =>
   /\b(start|begin|kick ?off|launch|hire|engage|enquire|inquire|quote|brief|work with you|work together|get started|need a (website|brand|logo|app|system|platform))\b/.test(
     n,
   );
+
+/* ---------------------------- stateless replies ---------------------------- */
 
 function servicesOverview() {
   return {
@@ -192,57 +182,6 @@ function processReply(session) {
       { text: 'You always know which stage you are in.' },
     ],
     chips: ['Start a project', 'What do you do?', 'See our work'],
-  };
-}
-
-function pricingReply(session) {
-  const service = session.topic?.type === 'service' ? getService(session.topic.slug) : null;
-  if (service) {
-    return out(
-      `${service.name} is scoped rather than priced from a list — the size of the build decides the figure. Share a little context and the team will come back with a clear number.`,
-      ['Start this project', "What's the process?", 'Talk to a human'],
-      [['Start a conversation', 'contact.html']],
-    );
-  }
-  if (session.topic?.type === 'academy') {
-    return out(
-      'Course fees, dates and formats are confirmed by the Ray Academy team, since they change by cohort. One message usually gets you the current numbers.',
-      ['Enquire about training', 'Which course fits me?'],
-      [['Contact Ray Academy', 'contact.html']],
-    );
-  }
-  return out(
-    'We scope each project around what it actually needs, so there is no price list. Tell me what you want to build and I will point you to the right place.',
-    ['Start a project', 'What do you do?', 'Talk to a human'],
-  );
-}
-
-function academyTrackReply(track) {
-  const list = trackCourses(track);
-  return {
-    messages: [
-      { text: `${trackLabel(track)} it is.` },
-      { text: 'Courses in that track:', items: list.map((course) => `${course.title} · ${course.format}`) },
-    ],
-    chips: ['Course fees', 'Enquire about training', 'Another track'],
-    links: list.length ? [[`Enquire about ${list[0].title}`, `contact.html?course=${list[0].slug}`]] : [],
-  };
-}
-
-function academyReply(session, extra = '') {
-  const track = detectTrack(extra);
-  if (track) {
-    session.topic = { type: 'academy', track };
-    return academyTrackReply(track);
-  }
-  session.topic = { type: 'academy' };
-  return {
-    messages: [
-      { text: 'Ray Academy is practical, project-based training — build real work, get feedback, leave with evidence.' },
-      { text: 'Four tracks:', items: tracks.map((item) => `${item.label} — ${trackCourses(item.key).length} ${trackCourses(item.key).length === 1 ? 'course' : 'courses'}`) },
-      { text: 'Which one sounds like you?' },
-    ],
-    chips: ['Software development', 'Design & creative', 'Marketing & websites', 'Data analytics'],
   };
 }
 
@@ -341,190 +280,308 @@ function projectSummary(session) {
   };
 }
 
-function projectStep(session, n, text) {
-  const slots = session.slots;
-  const step = session.flow.step;
+/* ------------------------------------------------------------------ *
+ * Engine factory
+ * ------------------------------------------------------------------ */
 
-  // Side questions never lose the thread.
-  if (isPricing(n)) return pricingReply(session);
-  if (isProcess(n)) return processReply(session);
-  if (isContact(n)) return contactReply();
+/**
+ * Build a Ray engine bound to a course catalogue.
+ *
+ * @param {object} [catalogue]
+ * @param {Array} [catalogue.courses] rows from listCoursesForAssistant()
+ * @param {Array} [catalogue.tracks]  rows from listTracks()
+ */
+export function createEngine({ courses = [], tracks = [] } = {}) {
+  const academyTracks = tracks.length ? tracks : ACADEMY_TRACKS;
+  const academyCourses = Array.isArray(courses) ? courses : [];
 
-  if (step === 0) {
-    const slug = detectService(n);
-    const unsure = /not sure|no idea|dont know|do not know|unsure|anything|advice|guide me|everything/.test(n);
-    if (!slug && !unsure) return out('Give me the closest match and I will take it from there.', SERVICE_CHIPS);
-    slots.service = slug || 'other';
-    if (slug) session.topic = { type: 'service', slug };
-    session.flow.step = 1;
-    return out(
-      slug
-        ? `${serviceLabel(slug)} — one of our strongest areas. Where are you with it right now?`
-        : 'No problem — a short conversation usually finds the right starting point. Where are you with it?',
-      ['Just exploring', 'Ready to start', 'I have a deadline'],
-    );
-  }
+  const trackLabel = (key) => academyTracks.find((track) => track.key === key)?.label ?? 'that track';
+  const trackCourses = (key) => academyCourses.filter((course) => course.trackKey === key);
+  const courseLink = (course) => [course.title, `/academy/courses/${course.slug}`];
 
-  if (step === 1) {
-    slots.stage = text.slice(0, 80);
-    session.flow.step = 2;
-    return out('Noted. When would you like to begin?', ['This month', 'This quarter', 'Still deciding']);
-  }
+  function pricingReply(session) {
+    const service = session.topic?.type === 'service' ? getService(session.topic.slug) : null;
 
-  if (step === 2) {
-    slots.timing = text.slice(0, 60);
-    session.flow.step = 3;
-    return out('Perfect. Who should the team reply to?', ['Skip this']);
-  }
-
-  if (step === 3) {
-    slots.name = /skip|rather not|no name/.test(n) ? '' : text.slice(0, 40);
-    session.flow.step = 4;
-    return out(
-      slots.name ? `Thanks, ${slots.name}. And the best email to reach you?` : 'No problem. Best email to reach you?',
-      ['Skip this'],
-    );
-  }
-
-  if (step === 4) {
-    if (/skip|rather not|no email/.test(n)) return projectSummary(session);
-    if (!EMAIL_RE.test(text.trim())) {
-      slots.emailTries += 1;
-      if (slots.emailTries > 1) return projectSummary(session);
-      return out('That does not look quite right — mind checking it? You can also type "skip".', ['Skip this']);
+    if (service) {
+      return out(
+        `${service.name} is scoped rather than priced from a list — the size of the build decides the figure. Share a little context and the team will come back with a clear number.`,
+        ['Start this project', "What's the process?", 'Talk to a human'],
+        [['Start a conversation', 'contact.html']],
+      );
     }
-    slots.email = text.trim();
+
+    if (session.topic?.type === 'academy') {
+      const sample = academyCourses.slice(0, 3);
+      return out(
+        sample.length
+          ? 'Every course fee is on its page, and codes like WEMRAY25 take 25% off. Here are three to start with — tap one to see the modules and enrol.'
+          : 'Course fees, dates and formats are confirmed by the Ray Academy team, since they change by cohort. One message usually gets you the current numbers.',
+        ['Which course fits me?', 'Enquire about training'],
+        sample.length ? sample.map(courseLink) : [['Browse the academy', 'academy.html']],
+      );
+    }
+
+    return out(
+      'We scope each project around what it actually needs, so there is no price list. Tell me what you want to build and I will point you to the right place.',
+      ['Start a project', 'What do you do?', 'Talk to a human'],
+    );
+  }
+
+  function academyTrackReply(track) {
+    const list = trackCourses(track);
+    return {
+      messages: [
+        { text: `${trackLabel(track)} it is.` },
+        {
+          text: list.length ? 'Courses in that track:' : 'Courses in that track are being updated.',
+          items: list.length ? list.map((course) => `${course.title} · ${course.format} · ${course.duration}`) : undefined,
+        },
+      ],
+      chips: ['Course fees', 'Enquire about training', 'Another track'],
+      links: list.length ? list.slice(0, 3).map(courseLink) : [['Browse the academy', 'academy.html']],
+    };
+  }
+
+  function academyReply(session, extra = '') {
+    const track = detectTrack(extra);
+    if (track) {
+      session.topic = { type: 'academy', track };
+      return academyTrackReply(track);
+    }
+
+    session.topic = { type: 'academy' };
+
+    return {
+      messages: [
+        {
+          text: 'Ray Academy is practical, project-based training — build real work, get feedback, leave with evidence.',
+        },
+        {
+          text: 'Four tracks:',
+          items: academyTracks.map((item) => {
+            const count = trackCourses(item.key).length;
+            return `${item.label} — ${count} ${count === 1 ? 'course' : 'courses'}`;
+          }),
+        },
+        { text: 'Which one sounds like you?' },
+      ],
+      chips: ['Software development', 'Design & creative', 'Marketing & websites', 'Data analytics'],
+    };
+  }
+
+  function academyStep(session, n) {
+    const track = detectTrack(n);
+    if (!track) {
+      return out(
+        'No rush — which of these sounds closest?',
+        ['Software development', 'Design & creative', 'Marketing & websites', 'Data analytics'],
+      );
+    }
+    session.flow = null;
+    return academyTrackReply(track);
+  }
+
+  function projectStep(session, n, text) {
+    const slots = session.slots;
+    const step = session.flow.step;
+
+    // Side questions never lose the thread.
+    if (isPricing(n)) return pricingReply(session);
+    if (isProcess(n)) return processReply(session);
+    if (isContact(n)) return contactReply();
+
+    if (step === 0) {
+      const slug = detectService(n);
+      const unsure = /not sure|no idea|dont know|do not know|unsure|anything|advice|guide me|everything/.test(n);
+      if (!slug && !unsure) return out('Give me the closest match and I will take it from there.', SERVICE_CHIPS);
+      slots.service = slug || 'other';
+      if (slug) session.topic = { type: 'service', slug };
+      session.flow.step = 1;
+      return out(
+        slug
+          ? `${serviceLabel(slug)} — one of our strongest areas. Where are you with it right now?`
+          : 'No problem — a short conversation usually finds the right starting point. Where are you with it?',
+        ['Just exploring', 'Ready to start', 'I have a deadline'],
+      );
+    }
+
+    if (step === 1) {
+      slots.stage = text.slice(0, 80);
+      session.flow.step = 2;
+      return out('Noted. When would you like to begin?', ['This month', 'This quarter', 'Still deciding']);
+    }
+
+    if (step === 2) {
+      slots.timing = text.slice(0, 60);
+      session.flow.step = 3;
+      return out('Perfect. Who should the team reply to?', ['Skip this']);
+    }
+
+    if (step === 3) {
+      slots.name = /skip|rather not|no name/.test(n) ? '' : text.slice(0, 40);
+      session.flow.step = 4;
+      return out(
+        slots.name ? `Thanks, ${slots.name}. And the best email to reach you?` : 'No problem. Best email to reach you?',
+        ['Skip this'],
+      );
+    }
+
+    if (step === 4) {
+      if (/skip|rather not|no email/.test(n)) return projectSummary(session);
+      if (!EMAIL_RE.test(text.trim())) {
+        slots.emailTries += 1;
+        if (slots.emailTries > 1) return projectSummary(session);
+        return out('That does not look quite right — mind checking it? You can also type "skip".', ['Skip this']);
+      }
+      slots.email = text.trim();
+      return projectSummary(session);
+    }
+
     return projectSummary(session);
   }
 
-  return projectSummary(session);
-}
+  return {
+    createSession() {
+      return { turn: 0, topic: null, flow: null, slots: {} };
+    },
 
-/* ---------------------------- course flow ---------------------------- */
+    openingMessage(pathname = '/') {
+      const hour = new Date().getHours();
+      const part = hour < 12 ? 'Morning' : hour < 17 ? 'Afternoon' : 'Evening';
+      if (pathname.startsWith('/academy')) {
+        return `${part} — I'm Ray, the Wemray assistant. You're on the Ray Academy page, so ask me about tracks, courses or training.`;
+      }
+      if (pathname.startsWith('/services')) {
+        return `${part} — I'm Ray. You're on our services pages, so ask me how we handle the work you're looking at.`;
+      }
+      if (pathname.startsWith('/portfolio')) {
+        return `${part} — I'm Ray. You're looking at our work, so ask me about any project here.`;
+      }
+      if (pathname.startsWith('/contact')) {
+        return `${part} — I'm Ray. If the form feels like a lot, tell me what you need and I'll take the first details.`;
+      }
+      return `${part} — I'm Ray, the Wemray assistant. Ask me about our services, Ray Academy, pricing, or how to start a project.`;
+    },
 
-const TRACK_CHIPS = ['Software development', 'Design & creative', 'Marketing & websites', 'Data analytics'];
+    respond(session, raw) {
+      const text = String(raw ?? '').trim();
+      const n = normalize(text);
+      session.turn += 1;
 
-function academyStep(session, n) {
-  const track = detectTrack(n);
-  if (!track) return out('No rush — which of these sounds closest?', TRACK_CHIPS);
-  session.flow = null;
-  return academyTrackReply(track);
-}
+      if (!n) return out('I am listening — ask me anything about Wemray.', defaultChips(session));
 
-/* ------------------------------ routing ------------------------------ */
+      if (/^(cancel|stop|never ?mind|forget it|reset|start over)$/.test(n)) {
+        session.flow = null;
+        session.slots = {};
+        return out('Cleared. What next?', defaultChips(session));
+      }
 
-export function respond(session, raw) {
-  const text = String(raw ?? '').trim();
-  const n = normalize(text);
-  session.turn += 1;
+      if (session.flow?.name === 'project') return projectStep(session, n, text);
+      if (session.flow?.name === 'academy') return academyStep(session, n);
 
-  if (!n) return out('I am listening — ask me anything about Wemray.', defaultChips(session));
+      if (isGreeting(n)) {
+        return out(
+          session.turn <= 2
+            ? pick([
+                'Hello — good to have you here. What are you working on?',
+                'Hey there. What can I help you figure out?',
+                'Hi. Ask me anything — services, training, pricing, or where to start.',
+              ])
+            : pick(['Hi again — where were we?', 'Hello again. What else can I dig into?']),
+          defaultChips(session),
+        );
+      }
+      if (isAck(n)) {
+        return out(
+          pick([
+            'Good. Anything else — services, pricing, process, or Ray Academy?',
+            'Noted. What would you like to look at next?',
+          ]),
+          defaultChips(session),
+        );
+      }
+      if (isIdentity(n)) {
+        return out(
+          'I am Ray, the assistant that lives in the corner of this site. Software rather than a person, but everything I know comes from the Wemray team.',
+          ['What do you do?', 'Talk to a human'],
+        );
+      }
+      if (isHowAreYou(n)) {
+        return out('Running smoothly, thanks for asking. How is your own project treating you?', defaultChips(session));
+      }
+      if (isJoke(n)) {
+        return out(
+          pick([
+            'Our designers asked for a joke about kerning. I said it was not my type. They are still deciding whether to forgive me.',
+            'I would tell you a joke about pixels, but it would only work at the right resolution.',
+          ]),
+          ['What do you do?', 'Start a project'],
+        );
+      }
+      if (isThanks(n)) {
+        return out(
+          pick(['Any time. Anything else I can dig into?', 'You are welcome — happy to keep going.']),
+          defaultChips(session),
+        );
+      }
+      if (isBye(n)) return out('Catch you later — I will be right here if something comes up.', []);
 
-  if (/^(cancel|stop|never ?mind|forget it|reset|start over)$/.test(n)) {
-    session.flow = null;
-    session.slots = {};
-    return out('Cleared. What next?', defaultChips(session));
-  }
+      if (isPricing(n)) return pricingReply(session);
+      if (isProcess(n)) return processReply(session);
+      if (isContact(n) && !detectService(n)) return contactReply();
 
-  if (session.flow?.name === 'project') return projectStep(session, n, text);
-  if (session.flow?.name === 'academy') return academyStep(session, n);
+      if (isStart(n) && !isAcademy(n)) {
+        const slug = detectService(n) || (session.topic?.type === 'service' ? session.topic.slug : '');
+        return startProjectFlow(session, slug);
+      }
 
-  if (isGreeting(n)) {
-    return out(
-      session.turn <= 2
-        ? pick([
-            'Hello — good to have you here. What are you working on?',
-            'Hey there. What can I help you figure out?',
-            'Hi. Ask me anything — services, training, pricing, or where to start.',
-          ])
-        : pick(['Hi again — where were we?', 'Hello again. What else can I dig into?']),
-      defaultChips(session),
-    );
-  }
-  if (isAck(n)) {
-    return out(
-      pick([
-        'Good. Anything else — services, pricing, process, or Ray Academy?',
-        'Noted. What would you like to look at next?',
-      ]),
-      defaultChips(session),
-    );
-  }
-  if (isIdentity(n)) {
-    return out(
-      'I am Ray, the assistant that lives in the corner of this site. Software rather than a person, but everything I know comes from the Wemray team.',
-      ['What do you do?', 'Talk to a human'],
-    );
-  }
-  if (isHowAreYou(n)) {
-    return out('Running smoothly, thanks for asking. How is your own project treating you?', defaultChips(session));
-  }
-  if (isJoke(n)) {
-    return out(
-      pick([
-        'Our designers asked for a joke about kerning. I said it was not my type. They are still deciding whether to forgive me.',
-        'I would tell you a joke about pixels, but it would only work at the right resolution.',
-      ]),
-      ['What do you do?', 'Start a project'],
-    );
-  }
-  if (isThanks(n)) {
-    return out(
-      pick(['Any time. Anything else I can dig into?', 'You are welcome — happy to keep going.']),
-      defaultChips(session),
-    );
-  }
-  if (isBye(n)) return out('Catch you later — I will be right here if something comes up.', []);
+      if (isAcademy(n)) {
+        if (/enquire|inquire|apply|join|sign up|talk|speak/.test(n) && !detectTrack(n)) {
+          return out(
+            'Happy to pass that on. Send the course or question and the academy team will reply with dates, fees and format.',
+            ['Which course fits me?', 'Course fees', 'What do you do?'],
+            [
+              ['Open the contact form', 'contact.html'],
+              ['Email hello@wemray.com', 'mailto:hello@wemray.com?subject=Ray%20Academy%20enquiry'],
+            ],
+          );
+        }
+        if (/which course|what course|fits me|recommend|suggest|not sure|track/.test(n)) {
+          session.flow = { name: 'academy', step: 0 };
+          return out('Let us narrow it down. Which area interests you most?', [
+            'Software development',
+            'Design & creative',
+            'Marketing & websites',
+            'Data analytics',
+          ]);
+        }
+        return academyReply(session, n);
+      }
 
-  if (isPricing(n)) return pricingReply(session);
-  if (isProcess(n)) return processReply(session);
-  if (isContact(n) && !detectService(n)) return contactReply();
+      const slug = detectService(n);
+      if (slug) return serviceReply(session, slug);
 
-  if (isStart(n) && !isAcademy(n)) {
-    const slug = detectService(n) || (session.topic?.type === 'service' ? session.topic.slug : '');
-    return startProjectFlow(session, slug);
-  }
+      if (isPortfolio(n)) return portfolioReply();
+      if (isMore(n)) {
+        if (session.topic?.type === 'service') return processReply(session);
+        if (session.topic?.type === 'academy') return academyReply(session);
+        return servicesOverview();
+      }
+      if (isAbout(n)) return aboutReply();
+      if (isCapabilities(n)) return servicesOverview();
 
-  if (isAcademy(n)) {
-    if (/enquire|inquire|apply|join|sign up|talk|speak/.test(n) && !detectTrack(n)) {
       return out(
-        'Happy to pass that on. Send the course or question and the academy team will reply with dates, fees and format.',
-        ['Which course fits me?', 'Course fees', 'What do you do?'],
+        pick([
+          'That one is outside my little library — the team will know, though. Ask me about services, pricing, process or training, or send the question straight to a person.',
+          'I do not have a scripted answer for that. I can cover services, pricing, process, our work and Ray Academy — or you can put it to a person.',
+        ]),
+        ['What do you do?', 'Start a project', 'Talk to a human'],
         [
-          ['Open the contact form', 'contact.html'],
-          ['Email hello@wemray.com', 'mailto:hello@wemray.com?subject=Ray%20Academy%20enquiry'],
+          ['Ask the team', 'contact.html'],
+          ['Email hello@wemray.com', 'mailto:hello@wemray.com'],
         ],
       );
-    }
-    if (/which course|what course|fits me|recommend|suggest|not sure|track/.test(n)) {
-      session.flow = { name: 'academy', step: 0 };
-      return out('Let us narrow it down. Which area interests you most?', TRACK_CHIPS);
-    }
-    return academyReply(session, n);
-  }
-
-  const slug = detectService(n);
-  if (slug) return serviceReply(session, slug);
-
-  if (isPortfolio(n)) return portfolioReply();
-  if (isMore(n)) {
-    if (session.topic?.type === 'service') return processReply(session);
-    if (session.topic?.type === 'academy') return academyReply(session);
-    return servicesOverview();
-  }
-  if (isAbout(n)) return aboutReply();
-  if (isCapabilities(n)) return servicesOverview();
-
-  return out(
-    pick([
-      'That one is outside my little library — the team will know, though. Ask me about services, pricing, process or training, or send the question straight to a person.',
-      'I do not have a scripted answer for that. I can cover services, pricing, process, our work and Ray Academy — or you can put it to a person.',
-    ]),
-    ['What do you do?', 'Start a project', 'Talk to a human'],
-    [
-      ['Ask the team', 'contact.html'],
-      ['Email hello@wemray.com', 'mailto:hello@wemray.com'],
-    ],
-  );
+    },
+  };
 }
 

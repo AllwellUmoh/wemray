@@ -2,7 +2,6 @@ import AppLink from './AppLink';
 import Button from './Button';
 
 export default function PageHero({
-  eyebrow,
   lines = [],
   sub,
   primary,
@@ -25,10 +24,6 @@ export default function PageHero({
         <div className="orb o2" />
       </div>
       <div className="hero-txt">
-        <div className="eb">
-          <span className="pd" />
-          {eyebrow}
-        </div>
         <h1 aria-label={label}>
           {lines.map((line, index) => (
             <span className="ln" key={`${line.t}-${index}`}>

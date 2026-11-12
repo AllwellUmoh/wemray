@@ -10,7 +10,6 @@ export function ContactHeroSection() {
     <section className="hero ah ct-h no-vis" id="top">
       <div className="hero-bg" aria-hidden="true"><div className="bl l2 on" /><div className="ov" /><div className="gr" /><div className="pxf" id="pxHero" /><div className="orb o1" /><div className="orb o2" /></div>
       <div className="hero-txt">
-        <div className="eb"><span className="pd" />Contact</div>
         <h1 id="hTitle" aria-label="Let’s Talk About What’s Next."><span className="ln"><i>Let’s Talk About</i></span><span className="ln"><i><span className="fw">What’s Next.</span></i><svg className="ul" viewBox="0 0 400 24" preserveAspectRatio="none" aria-hidden="true"><path pathLength={1} d="M4 16C80 4 150 22 220 12S340 6 396 14" /></svg></span></h1>
         <p className="sub">Tell us what you’re building, what needs to work better, or where you want to go. We’ll help you find the right next step.</p>
         <div className="ctas">

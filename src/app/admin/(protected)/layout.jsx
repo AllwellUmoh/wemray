@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin-auth';
+import AdminNav from './AdminNav';
 import LogoutButton from './LogoutButton';
 
 export default async function AdminProtectedLayout({ children }) {
@@ -17,11 +18,7 @@ export default async function AdminProtectedLayout({ children }) {
             </span>
           </div>
 
-          <nav className="admin-nav" aria-label="Admin navigation">
-            <Link href="/admin" className="active">Enquiries</Link>
-            <Link href="/admin/audits">SEO Audits</Link>
-            <Link href="/admin?status=new">New enquiries</Link>
-          </nav>
+          <AdminNav />
 
           <div className="admin-sidebar-footer">
             <Link href="/">View website</Link>

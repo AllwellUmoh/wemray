@@ -75,7 +75,6 @@ export default function LegalPage({ kind }) {
           <div className="orb o2" />
         </div>
         <div className="hero-txt">
-          <div className="eb"><span className="pd" />{page.eyebrow}</div>
           <h1 aria-label={page.title}>{page.title}</h1>
           <p className="sub">{page.description}</p>
           <div className="ctas">

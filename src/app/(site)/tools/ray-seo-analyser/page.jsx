@@ -70,7 +70,6 @@ export default function RaySeoAnalyserPage() {
         </nav>
         <div className="ray-hero-grid">
           <div className="ray-hero-copy">
-            <span className="eb"><span className="pd" /> Free Wemray tool</span>
             <h1>
               Audit one page. <span className="fw">Fix what matters.</span>
             </h1>

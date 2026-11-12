@@ -6,11 +6,11 @@ import CTASection from '../../ui/CTASection';
 import FaqSection from '../../ui/FaqSection';
 import { academyFaqs } from '../../../data/faqs';
 
-export default function AcademySections() {
+export default function AcademySections({ courses = [] }) {
   return (
     <>
-      <AcademyHero />
-      <LearningPaths />
+      <AcademyHero courses={courses} />
+      <LearningPaths courses={courses} />
       <AcademyAudience />
       <AcademyApproach />
       <FaqSection

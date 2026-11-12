@@ -12,7 +12,6 @@ export default function NotFoundContent() {
         <div className="orb o2" />
       </div>
       <div className="hero-txt">
-        <div className="eb"><span className="pd" />404</div>
         <h1 aria-label="Page not found.">
           <span className="ln"><i>Page Not</i></span>
           <span className="ln"><i><span className="fw">Found.</span></i></span>

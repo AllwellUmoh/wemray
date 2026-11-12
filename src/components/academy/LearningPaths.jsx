@@ -1,6 +1,6 @@
 import CourseGrid from './CourseGrid';
 
-export default function LearningPaths() {
+export default function LearningPaths({ courses = [] }) {
   return (
     <section className="ac-s p trk" id="tracks">
       <div className="ac-hd">
@@ -16,7 +16,7 @@ export default function LearningPaths() {
           </p>
         </div>
       </div>
-      <CourseGrid />
+      <CourseGrid courses={courses} />
     </section>
   );
 }

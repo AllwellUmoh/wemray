@@ -43,10 +43,6 @@ export function ServiceDetailHeroSection({ service }) {
           <i>/</i>
           <span>{service.name}</span>
         </nav>
-        <div className="eb">
-          <span className="pd" />
-          {service.eyebrow}
-        </div>
         <h1 aria-label={service.title}>
           {lines.map((line, index) => (
             <span className="ln" key={`${line.t}-${index}`}>
