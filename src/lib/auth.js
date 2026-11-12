@@ -5,17 +5,33 @@ import { pool } from './db';
 import { sendAdminMagicLink } from './email';
 
 const adminEmail = (process.env.ADMIN_EMAIL || 'wemraytechnology@gmail.com').trim().toLowerCase();
-const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://wemray.com').replace(/\/+$/, '');
-const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
-const baseURL =
+function normalizeAuthOrigin(value) {
+  const url = new URL(value);
+  if (url.hostname === 'wemray.com' || url.hostname === 'www.wemray.com') {
+    url.protocol = 'https:';
+    url.hostname = 'www.wemray.com';
+  }
+  return url.origin;
+}
+
+const siteUrl = normalizeAuthOrigin(
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wemray.com',
+);
+const vercelUrl = process.env.VERCEL_URL
+  ? normalizeAuthOrigin(`https://${process.env.VERCEL_URL}`)
+  : null;
+const baseURL = normalizeAuthOrigin(
   process.env.BETTER_AUTH_URL ||
   vercelUrl ||
-  'http://localhost:3000';
+  siteUrl,
+);
 
 const trustedOrigins = [
   siteUrl,
   baseURL,
   vercelUrl,
+  'https://www.wemray.com',
+  'https://wemray.com',
   'http://localhost:3000',
   'http://127.0.0.1:3000',
 ].filter(Boolean);
