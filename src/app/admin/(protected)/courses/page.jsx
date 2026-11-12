@@ -21,9 +21,12 @@ export default async function AdminCoursesPage() {
       <div className="admin-top">
         <div>
           <h1>Courses</h1>
-          <p>Ray Academy catalogue. Edit content in the database or add an editor here later.</p>
+          <p>Manage the catalogue, course details, and module outlines.</p>
         </div>
-        <span className="admin-user">Admin</span>
+        <div className="admin-top-actions">
+          <Link className="admin-button admin-button-primary" href="/admin/courses/new">Add course</Link>
+          <span className="admin-user">Admin</span>
+        </div>
       </div>
 
       <div className="admin-stats">
@@ -56,6 +59,7 @@ export default async function AdminCoursesPage() {
                   <th>Modules</th>
                   <th>Enrolled</th>
                   <th>Live</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,15 +83,17 @@ export default async function AdminCoursesPage() {
                         {course.is_active ? 'Live' : 'Hidden'}
                       </span>
                     </td>
+                    <td><Link className="admin-table-action" href={`/admin/courses/${course.id}`}>Edit</Link></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         ) : (
-          <p className="admin-empty">
-            No courses yet. Run <code>db/academy.sql</code> then <code>db/academy.seed.sql</code> to load the catalogue.
-          </p>
+          <div className="admin-empty admin-empty-callout">
+            <p>No courses yet. Add the first one to start building your Academy catalogue.</p>
+            <Link className="admin-button admin-button-primary" href="/admin/courses/new">Create a course</Link>
+          </div>
         )}
       </section>
     </>

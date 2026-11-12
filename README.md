@@ -15,12 +15,12 @@ marketing site, contact enquiries, and a passwordless admin area.
 ## Routes
 
 - `/`, `/about`, `/services`, `/services/[slug]`, `/portfolio`, `/academy`,
-  `/contact`, `/privacy`, `/terms`
+  `/events`, `/events/[slug]`, `/contact`, `/privacy`, `/terms`
 - `/academy/courses/[slug]` — course detail, modules and enrolment form
 - `/academy/enrol/success` — payment status
 - `/academy/enrol/balance` — second-instalment checkout
 - `/admin` — protected enquiries dashboard
-- `/admin/enrolments`, `/admin/courses` — academy admin views
+- `/admin/enrolments`, `/admin/courses`, `/admin/events` — academy admin views
 - `/admin/login` — magic-link sign in
 - `/api/contact` — contact form endpoint
 - `/api/academy/enrolments/initialize|verify|complete|status` — enrolment payments
@@ -64,6 +64,7 @@ marketing site, contact enquiries, and a passwordless admin area.
    psql "$DATABASE_URL" -f db/seo-analyzer.sql
    psql "$DATABASE_URL" -f db/academy.sql
    psql "$DATABASE_URL" -f db/academy.seed.sql
+   psql "$DATABASE_URL" -f db/academy.events.sql
    ```
 
 4. Start the development server:
@@ -103,8 +104,9 @@ emails are logged to the console when `RESEND_API_KEY` is not set.
 
 ## Ray Academy
 
-Courses, modules, prices, coupons and enrolments live in PostgreSQL. Run the
-academy migrations above, then manage the catalogue in `db/academy.seed.sql`
-and the admin area. See `docs/RAY_ACADEMY.md` for the payment flow, coupon,
-instalment and webhook details, and `docs/plan-completion/BUILD-LOG.md` for the
-current build status.
+Courses, modules, prices, coupons, enrolments, and event details live in
+PostgreSQL. Run the academy migrations above, then manage the catalogue and
+events from the admin area. Event flyers use public image URLs because Vercel
+deployments do not provide persistent local file storage. See
+`docs/RAY_ACADEMY.md` for the payment flow, coupon, instalment and webhook details, and
+`docs/plan-completion/BUILD-LOG.md` for the current build status.

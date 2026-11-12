@@ -131,6 +131,38 @@ export async function listAllCoursesAdmin() {
   return result.rows;
 }
 
+export async function getCourseForAdmin(id) {
+  const numericId = Number(id);
+  if (!Number.isSafeInteger(numericId) || numericId <= 0) return null;
+
+  const courseResult = await query(
+    `select c.*, t.label as track_label
+     from academy_courses c
+     join academy_tracks t on t.key = c.track_key
+     where c.id = $1`,
+    [numericId],
+  );
+
+  const course = courseResult.rows[0];
+  if (!course) return null;
+
+  const modulesResult = await query(
+    `select id, number, title, summary, topics, sort_order
+     from academy_course_modules
+     where course_id = $1
+     order by sort_order, number`,
+    [numericId],
+  );
+
+  return {
+    ...course,
+    modules: modulesResult.rows.map((module) => ({
+      ...module,
+      topics: Array.isArray(module.topics) ? module.topics : [],
+    })),
+  };
+}
+
 export async function updateEnrolmentStatus(id, status) {
   const numericId = Number(id);
   if (!Number.isSafeInteger(numericId) || numericId <= 0) return null;

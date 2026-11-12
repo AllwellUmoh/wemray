@@ -2,6 +2,7 @@ import { services } from '../data/services';
 import { SITE } from '../lib/seo';
 import { listCourseSitemapEntries } from '../lib/academy/courses';
 import { projects } from '../data/projects';
+import { listEventSitemapEntries } from '../lib/events';
 
 export const revalidate = 3600;
 
@@ -15,6 +16,7 @@ export default async function sitemap() {
     '/about',
     '/services',
     '/academy',
+    '/events',
     '/contact',
     '/tools/ray-seo-analyser',
     '/tools/ray-seo-analyser/crawler',
@@ -22,14 +24,17 @@ export default async function sitemap() {
     '/terms',
   ];
 
-  // Academy courses come from the database. A missing table must not break
-  // the sitemap, so fall back to the core pages.
+  // Database-backed content must never break the core sitemap pages.
   let courseEntries = [];
-  try {
-    courseEntries = await listCourseSitemapEntries();
-  } catch (error) {
-    console.error('Sitemap could not load academy courses', error);
-  }
+  let eventEntries = [];
+  const [coursesResult, eventsResult] = await Promise.allSettled([
+    listCourseSitemapEntries(),
+    listEventSitemapEntries(),
+  ]);
+  if (coursesResult.status === 'fulfilled') courseEntries = coursesResult.value;
+  else console.error('Sitemap could not load academy courses', coursesResult.reason);
+  if (eventsResult.status === 'fulfilled') eventEntries = eventsResult.value;
+  else console.error('Sitemap could not load events', eventsResult.reason);
 
   return [
     ...pages.map((path) => ({ url: `${SITE.url}${path}` })),
@@ -45,6 +50,11 @@ export default async function sitemap() {
       url: `${SITE.url}/academy/courses/${course.slug}`,
       lastModified: course.lastModified,
       images: course.imageUrl ? [absoluteImageUrl(course.imageUrl)] : undefined,
+    })),
+    ...eventEntries.map((event) => ({
+      url: `${SITE.url}/events/${event.slug}`,
+      lastModified: event.updated_at || undefined,
+      images: event.flyer_url ? [absoluteImageUrl(event.flyer_url)] : undefined,
     })),
   ];
 }

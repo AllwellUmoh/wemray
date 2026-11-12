@@ -7,6 +7,7 @@ const LINKS = [
   { href: '/admin', label: 'Enquiries', exact: true },
   { href: '/admin/enrolments', label: 'Enrolments' },
   { href: '/admin/courses', label: 'Courses' },
+  { href: '/admin/events', label: 'Events' },
   { href: '/admin/audits', label: 'SEO Audits' },
 ];
 

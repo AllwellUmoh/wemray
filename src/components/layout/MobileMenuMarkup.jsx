@@ -9,6 +9,7 @@ const links = [
 
 const tail = [
   { label: 'Portfolio', to: '/portfolio' },
+  { label: 'Events', to: '/events' },
   { label: 'Ray Academy', to: '/academy' },
 ];
 
