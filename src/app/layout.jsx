@@ -1,12 +1,12 @@
 import '../styles/site.css';
 import JsonLd from '../components/seo/JsonLd';
-import { buildMetadata, organizationSchema, websiteSchema } from '../lib/seo';
+import { buildMetadata, organizationSchema, SITE, websiteSchema } from '../lib/seo';
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://wemray.com'),
+  metadataBase: new URL(SITE.url),
   ...buildMetadata({ path: '/' }),
   applicationName: 'Wemray Technology',
-  authors: [{ name: 'Wemray Technology', url: 'https://wemray.com' }],
+  authors: [{ name: 'Wemray Technology', url: SITE.url }],
   creator: 'Wemray Technology',
   publisher: 'Wemray Technology',
   category: 'technology',

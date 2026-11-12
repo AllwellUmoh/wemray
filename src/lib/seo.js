@@ -1,10 +1,26 @@
+function getSiteOrigin() {
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wemray.com';
+  const url = new URL(configuredOrigin);
+
+  // The production domain permanently redirects apex traffic to www. Generate
+  // canonical URLs at the final destination while preserving preview/local URLs.
+  if (url.hostname === 'wemray.com' || url.hostname === 'www.wemray.com') {
+    url.protocol = 'https:';
+    url.hostname = 'www.wemray.com';
+  }
+
+  return url.origin;
+}
+
+const SITE_ORIGIN = getSiteOrigin();
+
 export const SITE = {
   name: 'Wemray Technology',
-  url: process.env.NEXT_PUBLIC_SITE_URL || 'https://wemray.com',
+  url: SITE_ORIGIN,
   email: 'hello@wemray.com',
   phone: '+2348139934328',
-  image: 'https://wemray.com/wemray-og.jpg',
-  logo: 'https://wemray.com/logo.png',
+  image: `${SITE_ORIGIN}/wemray-og-logo.jpg`,
+  logo: `${SITE_ORIGIN}/favicon-512x512.png`,
   social: [
     'https://instagram.com/wemraytechnology',
     'https://tiktok.com/@wemraytechnology',
@@ -38,8 +54,8 @@ export function organizationSchema() {
     logo: {
       '@type': 'ImageObject',
       url: SITE.logo,
-      width: 420,
-      height: 231,
+      width: 512,
+      height: 512,
     },
     image: SITE.image,
     description:
@@ -52,6 +68,11 @@ export function organizationSchema() {
       addressLocality: 'Port Harcourt',
       addressRegion: 'Rivers State',
       addressCountry: 'NG',
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 4.8156,
+      longitude: 7.0498,
     },
     areaServed: [
       { '@type': 'City', name: 'Port Harcourt' },
@@ -122,8 +143,8 @@ export function webPageSchema({
   title,
   description,
   type = 'WebPage',
-  image = SITE.image,
-  dateModified = '2026-10-31',
+  image,
+  dateModified,
 }) {
   return {
     '@type': type,
@@ -132,15 +153,17 @@ export function webPageSchema({
     name: title,
     description,
     inLanguage: 'en',
-    primaryImageOfPage: {
-      '@type': 'ImageObject',
-      url: image,
-      width: 1200,
-      height: 630,
-    },
+    ...(image
+      ? {
+          primaryImageOfPage: {
+            '@type': 'ImageObject',
+            url: absoluteUrl(image),
+          },
+        }
+      : {}),
     isPartOf: { '@id': WEBSITE_ID },
     about: { '@id': ORGANIZATION_ID },
-    dateModified,
+    ...(dateModified ? { dateModified } : {}),
   };
 }
 
@@ -221,7 +244,7 @@ export function buildMetadata({
           secureUrl: metaImage,
           width: 1200,
           height: 630,
-          alt: `${SITE.name} — branding, software and intelligent growth`,
+          alt: `${SITE.name} logo on a navy and purple background`,
           type: 'image/jpeg',
         },
       ],

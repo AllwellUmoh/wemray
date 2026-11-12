@@ -97,12 +97,6 @@ export default async function AcademyCoursePage({ params }) {
               format === 'Onsite' ? 'Onsite' : format === 'Online' ? 'Online' : 'Blended',
             ),
             provider: { '@id': `${SITE.url}/academy#organization` },
-            hasCourseInstance: {
-              '@type': 'CourseInstance',
-              courseMode: course.formats[0] || 'Online',
-              courseWorkload: course.classes,
-              duration: course.duration,
-            },
             offers: {
               '@type': 'Offer',
               price: (course.priceKobo / 100).toFixed(2),
@@ -112,7 +106,7 @@ export default async function AcademyCoursePage({ params }) {
               category: 'Paid course',
             },
             hasPart: course.modules.map((module) => ({
-              '@type': 'Course',
+              '@type': 'CreativeWork',
               name: module.title,
               description: module.summary,
             })),

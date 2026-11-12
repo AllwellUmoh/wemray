@@ -1,52 +1,50 @@
 import { services } from '../data/services';
 import { SITE } from '../lib/seo';
-import { listCourseSlugs } from '../lib/academy/courses';
+import { listCourseSitemapEntries } from '../lib/academy/courses';
+import { projects } from '../data/projects';
 
 export const revalidate = 3600;
 
-export default async function sitemap() {
-  const lastModified = new Date();
+function absoluteImageUrl(imagePath) {
+  return imagePath ? new URL(imagePath, SITE.url).toString() : undefined;
+}
 
+export default async function sitemap() {
   const pages = [
-    { path: '/', changeFrequency: 'weekly', priority: 1 },
-    { path: '/about', changeFrequency: 'monthly', priority: 0.8 },
-    { path: '/services', changeFrequency: 'monthly', priority: 0.9 },
-    { path: '/portfolio', changeFrequency: 'monthly', priority: 0.8 },
-    { path: '/academy', changeFrequency: 'weekly', priority: 0.8 },
-    { path: '/contact', changeFrequency: 'yearly', priority: 0.7 },
-    { path: '/tools/ray-seo-analyser', changeFrequency: 'monthly', priority: 0.8 },
-    { path: '/tools/ray-seo-analyser/crawler', changeFrequency: 'yearly', priority: 0.4 },
-    { path: '/privacy', changeFrequency: 'yearly', priority: 0.3 },
-    { path: '/terms', changeFrequency: 'yearly', priority: 0.3 },
+    '/',
+    '/about',
+    '/services',
+    '/academy',
+    '/contact',
+    '/tools/ray-seo-analyser',
+    '/tools/ray-seo-analyser/crawler',
+    '/privacy',
+    '/terms',
   ];
 
   // Academy courses come from the database. A missing table must not break
   // the sitemap, so fall back to the core pages.
-  let courseSlugs = [];
+  let courseEntries = [];
   try {
-    courseSlugs = await listCourseSlugs();
+    courseEntries = await listCourseSitemapEntries();
   } catch (error) {
     console.error('Sitemap could not load academy courses', error);
   }
 
   return [
-    ...pages.map((page) => ({
-      url: `${SITE.url}${page.path}`,
-      lastModified,
-      changeFrequency: page.changeFrequency,
-      priority: page.priority,
-    })),
+    ...pages.map((path) => ({ url: `${SITE.url}${path}` })),
     ...services.map((service) => ({
       url: `${SITE.url}/services/${service.slug}`,
-      lastModified,
-      changeFrequency: 'monthly',
-      priority: 0.75,
+      images: service.hero?.main ? [absoluteImageUrl(service.hero.main)] : undefined,
     })),
-    ...courseSlugs.map((slug) => ({
-      url: `${SITE.url}/academy/courses/${slug}`,
-      lastModified,
-      changeFrequency: 'weekly',
-      priority: 0.7,
+    {
+      url: `${SITE.url}/portfolio`,
+      images: projects.map((project) => absoluteImageUrl(project.image)),
+    },
+    ...courseEntries.map((course) => ({
+      url: `${SITE.url}/academy/courses/${course.slug}`,
+      lastModified: course.lastModified,
+      images: course.imageUrl ? [absoluteImageUrl(course.imageUrl)] : undefined,
     })),
   ];
 }

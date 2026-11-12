@@ -138,6 +138,22 @@ export async function listCourseSlugs() {
   return result.rows.map((row) => row.slug);
 }
 
+/** Active course sitemap data, including only values safe to publish. */
+export async function listCourseSitemapEntries() {
+  const result = await query(
+    `select slug, updated_at, image_url
+     from academy_courses
+     where is_active
+     order by sort_order, number`,
+  );
+
+  return result.rows.map((row) => ({
+    slug: row.slug,
+    lastModified: row.updated_at || undefined,
+    imageUrl: row.image_url || '',
+  }));
+}
+
 /** Light payload for the Ray assistant — keeps the client bundle small. */
 export async function listCoursesForAssistant() {
   const result = await query(

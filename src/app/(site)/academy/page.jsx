@@ -56,7 +56,7 @@ export default async function AcademyPage() {
             name: 'Ray Academy',
             url: absoluteUrl('/academy'),
             description:
-              'Practical digital skills training in software development, design, marketing, website management and data analytics by Wemray Technology.',
+              'Practical digital skills training in software development, design, marketing, website management, data analytics and artificial intelligence by Wemray Technology.',
             parentOrganization: { '@id': `${SITE.url}/#organization` },
             areaServed: SITE.areasServed.map((name) => ({ '@type': 'Place', name })),
             hasOfferCatalog: {
@@ -80,6 +80,30 @@ export default async function AcademyPage() {
               })),
             },
           },
+          ...(courses.length >= 3
+            ? [
+                {
+                  '@type': 'ItemList',
+                  '@id': `${absoluteUrl('/academy')}#course-list`,
+                  name: 'Ray Academy courses',
+                  itemListElement: courses.map((course, index) => ({
+                    '@type': 'ListItem',
+                    position: index + 1,
+                    url: absoluteUrl(`/academy/courses/${course.slug}`),
+                    item: {
+                      '@type': 'Course',
+                      name: course.title,
+                      description: course.description,
+                      provider: {
+                        '@type': 'EducationalOrganization',
+                        name: 'Ray Academy',
+                        url: absoluteUrl('/academy'),
+                      },
+                    },
+                  })),
+                },
+              ]
+            : []),
           faqSchema(academyFaqs),
         ]}
       />
