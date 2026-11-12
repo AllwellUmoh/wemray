@@ -4,7 +4,7 @@ import { magicLink } from 'better-auth/plugins';
 import { pool } from './db';
 import { sendAdminMagicLink } from './email';
 
-const adminEmail = (process.env.ADMIN_EMAIL || 'hello@wemray.com').trim().toLowerCase();
+const adminEmail = (process.env.ADMIN_EMAIL || 'wemraytechnology@gmail.com').trim().toLowerCase();
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://wemray.com').replace(/\/+$/, '');
 const vercelUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null;
 const baseURL =

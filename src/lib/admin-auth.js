@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { getSessionCookie } from 'better-auth/cookies';
 import { auth } from './auth';
 
-export const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'hello@wemray.com').trim().toLowerCase();
+export const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'wemraytechnology@gmail.com').trim().toLowerCase();
 
 export async function getAdminSession() {
   const requestHeaders = await headers();

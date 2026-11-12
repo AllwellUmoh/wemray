@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import { authClient } from '@/lib/auth-client';
 
 export default function LoginForm() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('wemraytechnology@gmail.com');
   const [status, setStatus] = useState('idle');
   const [error, setError] = useState('');
 
@@ -69,7 +69,7 @@ export default function LoginForm() {
             onChange={(event) => setEmail(event.target.value)}
             autoComplete="email"
             required
-            placeholder="you@wemray.com"
+            placeholder="wemraytechnology@gmail.com"
           />
         </label>
         <Button variant="pur" type="submit">
