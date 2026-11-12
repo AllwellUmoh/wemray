@@ -19,12 +19,6 @@ function parsePriceKobo(value) {
   return (BigInt(match[1]) * 100n + BigInt((match[2] || '').padEnd(2, '0') || '0')).toString();
 }
 
-function parseInteger(value, fallback = 0) {
-  if (!/^\d+$/.test(value)) return fallback;
-  const number = Number(value);
-  return Number.isSafeInteger(number) && number <= 1000000 ? number : fallback;
-}
-
 function validateImageUrl(value) {
   if (!value) return '';
   if (value.startsWith('/') && !value.startsWith('//')) return value;
@@ -96,7 +90,6 @@ export async function saveCourseAction(_previousState, formData) {
   const id = readText(formData, 'course_id', 20);
   const numericId = id ? Number(id) : null;
   const title = readText(formData, 'title', 200);
-  const number = readText(formData, 'number', 20);
   const trackKey = readText(formData, 'track_key', 80);
   const formats = formData.getAll('formats').map(String).filter((value) => ALLOWED_FORMATS.has(value));
   const delivery = formData.getAll('delivery').map(String).filter((value) => ALLOWED_DELIVERY.has(value));
@@ -109,7 +102,6 @@ export async function saveCourseAction(_previousState, formData) {
   const icon = readText(formData, 'icon', 60) || 'monitor';
   const imageUrl = validateImageUrl(readText(formData, 'image_url', 2000));
   const isActive = formData.get('is_active') === 'on';
-  const sortOrder = parseInteger(readText(formData, 'sort_order', 12));
   const parsedModules = parseModules(readText(formData, 'modules_json', 200000));
 
   if (id && (!Number.isSafeInteger(numericId) || numericId <= 0)) {
@@ -128,11 +120,12 @@ export async function saveCourseAction(_previousState, formData) {
   const client = await pool.connect();
   let savedCourse;
   let previousSlug = '';
+  let number = '';
   try {
     await client.query('begin');
     if (numericId) {
       const existing = await client.query(
-        'select id, slug from academy_courses where id = $1 for update',
+        'select id, slug, number from academy_courses where id = $1 for update',
         [numericId],
       );
       if (!existing.rows[0]) {
@@ -140,6 +133,15 @@ export async function saveCourseAction(_previousState, formData) {
         return { error: 'That course could not be found.' };
       }
       previousSlug = existing.rows[0].slug;
+      number = existing.rows[0].number;
+    } else {
+      await client.query('select pg_advisory_xact_lock(7411290137::bigint)');
+      const nextNumber = await client.query(
+        `select coalesce(max(number::bigint), 0) + 1 as value
+         from academy_courses
+         where number ~ '^[0-9]+$'`,
+      );
+      number = String(nextNumber.rows[0].value).padStart(2, '0');
     }
     const slug = await uniqueCourseSlug(client, title, numericId);
 
@@ -165,22 +167,22 @@ export async function saveCourseAction(_previousState, formData) {
          set slug = $2, number = $3, title = $4, track_key = $5, formats = $6, delivery = $7,
              duration = $8, classes = $9, certificate = $10, description = $11,
              outcome = $12, price_kobo = $13, icon = $14, image_url = $15,
-             is_active = $16, sort_order = $17, updated_at = now()
+             is_active = $16, updated_at = now()
          where id = $1
          returning id, slug`,
         [numericId, slug, number, title, trackKey, formats, delivery, duration, classes, certificate,
-          description, outcome, priceKobo, icon, imageUrl, isActive, sortOrder],
+          description, outcome, priceKobo, icon, imageUrl, isActive],
       );
       savedCourse = result.rows[0];
     } else {
       const result = await client.query(
         `insert into academy_courses
           (slug, number, title, track_key, formats, delivery, duration, classes, certificate,
-           description, outcome, price_kobo, icon, image_url, is_active, sort_order)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+           description, outcome, price_kobo, icon, image_url, is_active)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
          returning id, slug`,
         [slug, number, title, trackKey, formats, delivery, duration, classes, certificate,
-          description, outcome, priceKobo, icon, imageUrl, isActive, sortOrder],
+          description, outcome, priceKobo, icon, imageUrl, isActive],
       );
       savedCourse = result.rows[0];
     }

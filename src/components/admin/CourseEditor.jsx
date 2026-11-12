@@ -123,7 +123,8 @@ export default function CourseEditor({ course = null, tracks = [] }) {
           </label>
           <label className="admin-field">
             Course number
-            <input name="number" defaultValue={course?.number || ''} maxLength={20} placeholder="10" />
+            <input value={course?.number || 'Assigned when saved'} readOnly />
+            <small>{course ? 'Assigned automatically and kept with this course.' : 'The next number is automatic; new courses appear first in the Academy.'}</small>
           </label>
           <div className="admin-field">
             <label htmlFor="course-track">Track</label>
@@ -166,10 +167,6 @@ export default function CourseEditor({ course = null, tracks = [] }) {
           <label className="admin-field">
             Icon key
             <input name="icon" defaultValue={course?.icon || 'monitor'} maxLength={60} placeholder="monitor" />
-          </label>
-          <label className="admin-field">
-            Display order
-            <input name="sort_order" type="number" min="0" max="1000000" defaultValue={course?.sort_order ?? 0} />
           </label>
           <label className="admin-field admin-field-wide">
             Course description

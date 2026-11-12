@@ -14,7 +14,7 @@ export { deliveryLabel, formatLabel };
 const COURSE_COLUMNS = `
   c.id, c.slug, c.number, c.title, c.track_key, c.formats, c.delivery,
   c.duration, c.classes, c.certificate, c.description, c.outcome,
-  c.price_kobo, c.icon, to_jsonb(c)->>'image_url' as image_url, c.is_active, c.sort_order,
+  c.price_kobo, c.icon, to_jsonb(c)->>'image_url' as image_url, c.is_active,
   t.label as track_label`;
 
 function mapCourse(row) {
@@ -41,7 +41,6 @@ function mapCourse(row) {
     icon: row.icon,
     imageUrl: row.image_url || '',
     isActive: row.is_active,
-    sortOrder: row.sort_order,
   };
 }
 
@@ -60,7 +59,7 @@ export async function listCourses({ activeOnly = true } = {}) {
      from academy_courses c
      join academy_tracks t on t.key = c.track_key
      ${activeOnly ? 'where c.is_active' : ''}
-     order by c.sort_order, c.number`,
+     order by c.created_at desc, c.id desc`,
   );
   return result.rows.map(mapCourse);
 }
@@ -138,7 +137,7 @@ export async function getTrackCounts() {
 /** Slugs only — used by the sitemap and generateStaticParams. */
 export async function listCourseSlugs() {
   const result = await query(
-    `select slug from academy_courses where is_active order by sort_order, number`,
+    `select slug from academy_courses where is_active order by created_at desc, id desc`,
   );
   return result.rows.map((row) => row.slug);
 }
@@ -149,7 +148,7 @@ export async function listCourseSitemapEntries() {
     `select slug, updated_at, image_url
      from academy_courses
      where is_active
-     order by sort_order, number`,
+     order by created_at desc, id desc`,
   );
 
   return result.rows.map((row) => ({
@@ -167,7 +166,7 @@ export async function listCoursesForAssistant() {
      from academy_courses c
      join academy_tracks t on t.key = c.track_key
      where c.is_active
-     order by c.sort_order, c.number`,
+     order by c.created_at desc, c.id desc`,
   );
 
   return result.rows.map((row) => ({

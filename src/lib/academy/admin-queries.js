@@ -119,14 +119,14 @@ export async function getEnrolmentDetail(id) {
 export async function listAllCoursesAdmin() {
   const result = await query(
     `select c.id, c.slug, c.number, c.title, c.track_key, c.formats, c.delivery,
-            c.duration, c.classes, c.certificate, c.price_kobo, c.is_active, c.sort_order,
+            c.duration, c.classes, c.certificate, c.price_kobo, c.is_active,
             t.label as track_label,
             (select count(*)::int from academy_course_modules m where m.course_id = c.id) as module_count,
             (select count(*)::int from academy_enrolments e
               where e.course_slug = c.slug and e.status in ('paid', 'part_paid')) as enrolment_count
      from academy_courses c
      join academy_tracks t on t.key = c.track_key
-     order by c.sort_order, c.number`,
+     order by c.created_at desc, c.id desc`,
   );
   return result.rows;
 }
