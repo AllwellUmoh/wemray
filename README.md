@@ -106,7 +106,9 @@ emails are logged to the console when `RESEND_API_KEY` is not set.
 
 Courses, modules, prices, coupons, enrolments, and event details live in
 PostgreSQL. Run the academy migrations above, then manage the catalogue and
-events from the admin area. Event flyers use public image URLs because Vercel
-deployments do not provide persistent local file storage. See
+events from the admin area. Run `db/academy.admin-enhancements.sql` for track
+management, title-generated URL history, and persistent event flyer uploads.
+Flyer images are validated JPG, PNG, or WebP files stored in PostgreSQL (up to
+3 MB each). See
 `docs/RAY_ACADEMY.md` for the payment flow, coupon, instalment and webhook details, and
 `docs/plan-completion/BUILD-LOG.md` for the current build status.

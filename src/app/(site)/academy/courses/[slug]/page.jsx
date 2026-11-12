@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import CourseDetailSections from '../../../../../components/academy/course/CourseDetailSections';
 import JsonLd from '../../../../../components/seo/JsonLd';
 import {
@@ -60,6 +60,7 @@ export default async function AcademyCoursePage({ params }) {
   }
 
   if (!course) notFound();
+  if (course.slug !== slug) permanentRedirect(`/academy/courses/${course.slug}`);
 
   let related = [];
   try {

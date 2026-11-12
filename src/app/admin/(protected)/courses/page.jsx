@@ -24,6 +24,7 @@ export default async function AdminCoursesPage() {
           <p>Manage the catalogue, course details, and module outlines.</p>
         </div>
         <div className="admin-top-actions">
+          <Link className="admin-button admin-button-quiet" href="/admin/tracks">Manage tracks</Link>
           <Link className="admin-button admin-button-primary" href="/admin/courses/new">Add course</Link>
           <span className="admin-user">Admin</span>
         </div>

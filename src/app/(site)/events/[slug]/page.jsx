@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import JsonLd from '@/components/seo/JsonLd';
@@ -41,6 +41,7 @@ export default async function EventDetailPage({ params }) {
   const { slug } = await params;
   const event = await loadEvent(slug);
   if (!event) notFound();
+  if (event.slug !== slug) permanentRedirect(`/events/${event.slug}`);
 
   const url = absoluteUrl(`/events/${event.slug}`);
   const title = `${event.title} | Wemray Events`;
@@ -74,7 +75,6 @@ export default async function EventDetailPage({ params }) {
         </div>
         <div className="event-detail-layout">
           <div className="event-detail-copy">
-            <span className="events-kicker"><i /> Wemray gatherings</span>
             <h1>{event.title}</h1>
             <p>{event.description}</p>
             <div className="event-detail-cta">

@@ -47,7 +47,12 @@ export async function getPublishedEventBySlug(slug) {
   const result = await query(
     `select ${EVENT_COLUMNS}
      from academy_events
-     where slug = $1 and status = 'published'`,
+     where (slug = $1 or exists (
+       select 1 from academy_event_slug_history h
+       where h.slug = $1 and h.event_id = academy_events.id
+     )) and status = 'published'
+     order by (slug = $1) desc
+     limit 1`,
     [slug],
   );
   return result.rows[0] || null;

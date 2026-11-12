@@ -41,6 +41,7 @@ const nextConfig = {
   poweredByHeader: false,
   experimental: {
     optimizePackageImports: ['lucide-react'],
+    serverActions: { bodySizeLimit: '4mb' },
   },
   async redirects() {
     return [

@@ -131,6 +131,27 @@ export async function listAllCoursesAdmin() {
   return result.rows;
 }
 
+export async function listTracksAdmin() {
+  const result = await query(
+    `select t.key, t.label, t.description, t.sort_order,
+            count(c.id)::int as course_count
+     from academy_tracks t
+     left join academy_courses c on c.track_key = t.key
+     group by t.id, t.key, t.label, t.description, t.sort_order
+     order by t.sort_order, t.label`,
+  );
+  return result.rows;
+}
+
+export async function getTrackForAdmin(key) {
+  const result = await query(
+    `select key, label, description, sort_order
+     from academy_tracks where key = $1`,
+    [key],
+  );
+  return result.rows[0] || null;
+}
+
 export async function getCourseForAdmin(id) {
   const numericId = Number(id);
   if (!Number.isSafeInteger(numericId) || numericId <= 0) return null;

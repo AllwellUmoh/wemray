@@ -1,8 +1,10 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useRef, useState, useTransition } from 'react';
 import Link from 'next/link';
+import { createTrackInlineAction } from '@/app/admin/(protected)/tracks/actions';
 import { saveCourseAction } from '@/app/admin/(protected)/courses/actions';
+import { slugify } from '@/lib/slugify';
 
 const FORMATS = ['Online', 'Onsite', 'Hybrid'];
 const DELIVERY = ['Weekday', 'Weekend'];
@@ -21,23 +23,48 @@ function mapModule(module, index) {
   };
 }
 
-function slugify(value) {
-  return value
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
 export default function CourseEditor({ course = null, tracks = [] }) {
   const [state, formAction, pending] = useActionState(saveCourseAction, null);
+  const [availableTracks, setAvailableTracks] = useState(tracks);
   const [title, setTitle] = useState(course?.title || '');
-  const [slug, setSlug] = useState(course?.slug || '');
-  const [slugTouched, setSlugTouched] = useState(Boolean(course?.slug));
+  const [trackKey, setTrackKey] = useState(course?.track_key || tracks[0]?.key || '');
   const [modules, setModules] = useState((course?.modules || []).map(mapModule));
+  const [trackDialogOpen, setTrackDialogOpen] = useState(false);
+  const [trackState, setTrackState] = useState(null);
+  const [trackPending, startTrackTransition] = useTransition();
+  const trackDialogRef = useRef(null);
   const selectedFormats = course?.formats || ['Online'];
   const selectedDelivery = course?.delivery || ['Weekday'];
+  const slug = course?.title === title ? course.slug : slugify(title, title ? 'course' : '');
+
+  useEffect(() => {
+    const dialog = trackDialogRef.current;
+    if (!dialog) return;
+    if (trackDialogOpen && !dialog.open) dialog.showModal();
+    if (!trackDialogOpen && dialog.open) dialog.close();
+  }, [trackDialogOpen]);
+
+  function addTrack(event) {
+    event.preventDefault();
+    const modalForm = event.currentTarget;
+    const formData = new FormData(modalForm);
+    setTrackState(null);
+    startTrackTransition(async () => {
+      const result = await createTrackInlineAction(formData);
+      if (result?.error) {
+        setTrackState(result);
+        return;
+      }
+      if (!result?.track) {
+        setTrackState({ error: 'The track could not be added. Please try again.' });
+        return;
+      }
+      setAvailableTracks((current) => [...current, result.track].sort((a, b) => a.sort_order - b.sort_order || a.label.localeCompare(b.label)));
+      setTrackKey(result.track.key);
+      modalForm.reset();
+      setTrackDialogOpen(false);
+    });
+  }
 
   function updateModule(index, key, value) {
     setModules((current) => current.map((module, moduleIndex) => (
@@ -56,6 +83,7 @@ export default function CourseEditor({ course = null, tracks = [] }) {
   }
 
   return (
+    <>
     <form action={formAction} className="admin-form admin-editor-form">
       {course ? <input type="hidden" name="course_id" value={course.id} /> : null}
       <input type="hidden" name="modules_json" value={JSON.stringify(modules)} />
@@ -79,11 +107,7 @@ export default function CourseEditor({ course = null, tracks = [] }) {
             <input
               name="title"
               value={title}
-              onChange={(event) => {
-                const nextTitle = event.target.value;
-                setTitle(nextTitle);
-                if (!slugTouched) setSlug(slugify(nextTitle));
-              }}
+              onChange={(event) => setTitle(event.target.value)}
               maxLength={200}
               required
             />
@@ -91,29 +115,27 @@ export default function CourseEditor({ course = null, tracks = [] }) {
           <label className="admin-field">
             Course URL slug
             <input
-              name="slug"
               value={slug}
-              onChange={(event) => {
-                setSlugTouched(true);
-                setSlug(slugify(event.target.value));
-              }}
-              readOnly={Boolean(course)}
-              maxLength={100}
-              required
+              readOnly
+              placeholder="course-title"
             />
-            <small>{course ? 'Fixed so existing course and enrolment links keep working.' : 'Generated from the title; you can edit it before saving.'}</small>
+            <small>Generated from the title. The public page is /academy/courses/{slug || '…'}. Old links redirect after a title change.</small>
           </label>
           <label className="admin-field">
             Course number
             <input name="number" defaultValue={course?.number || ''} maxLength={20} placeholder="10" />
           </label>
-          <label className="admin-field">
-            Track
-            <select name="track_key" defaultValue={course?.track_key || tracks[0]?.key || ''} required>
+          <div className="admin-field">
+            <label htmlFor="course-track">Track</label>
+            <div className="admin-track-select-row">
+              <select id="course-track" name="track_key" value={trackKey} onChange={(event) => setTrackKey(event.target.value)} required>
               <option value="" disabled>Select a track</option>
-              {tracks.map((track) => <option key={track.key} value={track.key}>{track.label}</option>)}
-            </select>
-          </label>
+              {availableTracks.map((track) => <option key={track.key} value={track.key}>{track.label}</option>)}
+              </select>
+              <button className="admin-track-add" type="button" onClick={() => { setTrackState(null); setTrackDialogOpen(true); }} aria-label="Add a course track" title="Add a course track">+</button>
+            </div>
+            <small>Manage all learning paths on the <Link href="/admin/tracks">tracks page</Link>.</small>
+          </div>
           <label className="admin-field">
             Course fee (NGN)
             <input
@@ -254,5 +276,37 @@ export default function CourseEditor({ course = null, tracks = [] }) {
         </button>
       </div>
     </form>
+
+    <dialog
+      className="admin-modal"
+      ref={trackDialogRef}
+      onCancel={(event) => { event.preventDefault(); setTrackDialogOpen(false); }}
+    >
+      <form onSubmit={addTrack}>
+        <div className="admin-modal-head">
+          <div><span className="admin-editor-kicker">New learning path</span><h2>Add a track</h2></div>
+          <button type="button" className="admin-modal-close" onClick={() => setTrackDialogOpen(false)} aria-label="Close track form">×</button>
+        </div>
+        {trackState?.error ? <p className="admin-notice bad" role="alert">{trackState.error}</p> : null}
+        <label className="admin-field">
+          Track name
+          <input name="label" maxLength={160} placeholder="e.g. Data & Analytics" required autoFocus />
+          <small>The track URL key is generated automatically from its name.</small>
+        </label>
+        <label className="admin-field">
+          Description
+          <textarea name="description" maxLength={3000} rows={3} placeholder="A short description of this learning path" />
+        </label>
+        <label className="admin-field">
+          Display order
+          <input name="sort_order" type="number" min="0" max="1000000" defaultValue="0" />
+        </label>
+        <div className="admin-modal-actions">
+          <button className="admin-button admin-button-quiet" type="button" onClick={() => setTrackDialogOpen(false)}>Cancel</button>
+          <button className="admin-button admin-button-primary" type="submit" disabled={trackPending}>{trackPending ? 'Adding track…' : 'Add track'}</button>
+        </div>
+      </form>
+    </dialog>
+    </>
   );
 }

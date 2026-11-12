@@ -112,7 +112,6 @@ export default async function EventsPage() {
         <div className="events-hero-orbit events-hero-orbit-one" />
         <div className="events-hero-orbit events-hero-orbit-two" />
         <div className="events-hero-inner">
-          <span className="events-kicker"><i /> Wemray gatherings</span>
           <h1>Ideas move<br /><em>when we meet.</em></h1>
           <p>Workshops, conversations, and practical sessions for people building what comes next.</p>
           <a className="events-scroll-link" href="#upcoming">Explore upcoming events <span aria-hidden="true">↓</span></a>

@@ -72,7 +72,12 @@ export async function getCourseBySlug(slug) {
     `select ${COURSE_COLUMNS}
      from academy_courses c
      join academy_tracks t on t.key = c.track_key
-     where c.slug = $1 and c.is_active`,
+     where (c.slug = $1 or exists (
+       select 1 from academy_course_slug_history h
+       where h.slug = $1 and h.course_id = c.id
+     )) and c.is_active
+     order by (c.slug = $1) desc
+     limit 1`,
     [slug],
   );
 

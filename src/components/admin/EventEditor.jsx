@@ -1,18 +1,10 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { saveEventAction } from '@/app/admin/(protected)/events/actions';
-
-function slugify(value) {
-  return value
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
+import { slugify } from '@/lib/slugify';
 
 function dateValue(value) {
   if (!value) return '';
@@ -27,12 +19,23 @@ function timeValue(value) {
 export default function EventEditor({ event = null }) {
   const [state, formAction, pending] = useActionState(saveEventAction, null);
   const [title, setTitle] = useState(event?.title || '');
-  const [slug, setSlug] = useState(event?.slug || '');
-  const [slugTouched, setSlugTouched] = useState(Boolean(event?.slug));
-  const [flyerUrl, setFlyerUrl] = useState(event?.flyer_url || '');
+  const [flyerPreview, setFlyerPreview] = useState(event?.flyer_url || '');
+  const flyerPreviewUrlRef = useRef(null);
   const [properties, setProperties] = useState(Array.isArray(event?.properties) ? event.properties : []);
-  const flyerPreviewable =
-    (flyerUrl.startsWith('/') && !flyerUrl.startsWith('//')) || /^https?:\/\//i.test(flyerUrl);
+  const slug = event?.title === title ? event.slug : slugify(title, title ? 'event' : '');
+
+  useEffect(() => {
+    return () => {
+      if (flyerPreviewUrlRef.current) URL.revokeObjectURL(flyerPreviewUrlRef.current);
+    };
+  }, []);
+
+  function chooseFlyer(eventChange) {
+    const file = eventChange.target.files?.[0] || null;
+    if (flyerPreviewUrlRef.current) URL.revokeObjectURL(flyerPreviewUrlRef.current);
+    flyerPreviewUrlRef.current = file ? URL.createObjectURL(file) : null;
+    setFlyerPreview(flyerPreviewUrlRef.current || event?.flyer_url || '');
+  }
 
   function updateProperty(index, key, value) {
     setProperties((current) => current.map((property, propertyIndex) => (
@@ -41,8 +44,9 @@ export default function EventEditor({ event = null }) {
   }
 
   return (
-    <form action={formAction} className="admin-form admin-editor-form">
+    <form action={formAction} className="admin-form admin-editor-form" encType="multipart/form-data">
       {event ? <input type="hidden" name="event_id" value={event.id} /> : null}
+      <input type="hidden" name="flyer_url" value={event?.flyer_url || ''} />
       <input type="hidden" name="properties_json" value={JSON.stringify(properties)} />
       {state?.error ? <p className="admin-notice bad" role="alert">{state.error}</p> : null}
 
@@ -64,10 +68,7 @@ export default function EventEditor({ event = null }) {
             <input
               name="title"
               value={title}
-              onChange={(change) => {
-                setTitle(change.target.value);
-                if (!slugTouched) setSlug(slugify(change.target.value));
-              }}
+              onChange={(change) => setTitle(change.target.value)}
               maxLength={200}
               required
             />
@@ -75,15 +76,11 @@ export default function EventEditor({ event = null }) {
           <label className="admin-field">
             Event URL slug
             <input
-              name="slug"
               value={slug}
-              onChange={(change) => {
-                setSlugTouched(true);
-                setSlug(slugify(change.target.value));
-              }}
-              maxLength={120}
-              required
+              readOnly
+              placeholder="event-title"
             />
+            <small>Generated from the title. The public page is /events/{slug || '…'}. Old links redirect after a title change.</small>
           </label>
           <label className="admin-field">
             Event type
@@ -120,23 +117,21 @@ export default function EventEditor({ event = null }) {
             <textarea name="description" defaultValue={event?.description || ''} maxLength={10000} rows={6} required />
           </label>
           <label className="admin-field admin-field-wide">
-            Flyer image URL
+            Event flyer image
             <input
-              name="flyer_url"
-              value={flyerUrl}
-              onChange={(change) => setFlyerUrl(change.target.value)}
-              maxLength={2000}
-              placeholder="https://… or /images/event-flyer.jpg"
+              name="flyer_file"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={chooseFlyer}
             />
-            <small>Use a public image URL or an image already in the site’s public folder.</small>
+            <small>Upload a JPG, PNG, or WebP up to 3 MB. Leave this empty to keep the current flyer.</small>
           </label>
         </div>
 
-        {flyerPreviewable ? (
+        {flyerPreview ? (
           <div className="admin-flyer-preview">
             <span>Flyer preview</span>
-            {/* Event flyers can be supplied from the website or any public image host. */}
-            <Image unoptimized src={flyerUrl} alt="Event flyer preview" width={640} height={400} />
+            <Image unoptimized src={flyerPreview} alt="Event flyer preview" width={640} height={400} />
           </div>
         ) : null}
 

@@ -30,11 +30,6 @@ export default function HeaderMarkup() {
         </li>
         <li><AppLink to="/portfolio">Portfolio</AppLink></li>
         <li><AppLink to="/events">Events</AppLink></li>
-        <li className="has-mega has-tools"><AppLink href="/tools/ray-seo-analyser" aria-haspopup="true" aria-expanded="false" aria-controls="tools">Tools <svg className="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></AppLink>
-          <div className="mega mega-tools" id="tools">
-            <AppLink className="mi mi-tool" href="/tools/ray-seo-analyser"><span className="mic"><svg className="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx={11} cy={11} r={8} /><path d="m21 21-4.3-4.3" /></svg></span><span><b>RAY SEO Analyser</b><small>Audit a single page with an evidence-backed RAY diagnostic score.</small></span><svg className="arr2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7" /></svg></AppLink>
-          </div>
-        </li>
         <li><AppLink to="/academy">Ray Academy</AppLink></li>
       </ul>
       <Button to="/contact" variant="pur">Start a Conversation</Button>

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin-auth';
 import { pool } from '@/lib/db';
+import { slugify } from '@/lib/slugify';
 
 const ALLOWED_FORMATS = new Set(['Hybrid', 'Online', 'Onsite']);
 const ALLOWED_DELIVERY = new Set(['Weekday', 'Weekend']);
@@ -73,13 +74,28 @@ function parseModules(value) {
   return { modules };
 }
 
+async function uniqueCourseSlug(client, title, currentId) {
+  const base = slugify(title, 'course');
+  for (let suffix = 1; suffix <= 1000; suffix += 1) {
+    const candidate = suffix === 1 ? base : `${base}-${suffix}`;
+    const result = await client.query(
+      `select
+         exists (select 1 from academy_courses where slug = $1 and ($2::bigint is null or id <> $2))
+         or exists (select 1 from academy_course_slug_history where slug = $1 and ($2::bigint is null or course_id <> $2))
+         as used`,
+      [candidate, currentId],
+    );
+    if (!result.rows[0]?.used) return candidate;
+  }
+  throw new Error('Unable to generate a unique course URL.');
+}
+
 export async function saveCourseAction(_previousState, formData) {
   await requireAdmin();
 
   const id = readText(formData, 'course_id', 20);
   const numericId = id ? Number(id) : null;
   const title = readText(formData, 'title', 200);
-  const slug = readText(formData, 'slug', 100).toLowerCase();
   const number = readText(formData, 'number', 20);
   const trackKey = readText(formData, 'track_key', 80);
   const formats = formData.getAll('formats').map(String).filter((value) => ALLOWED_FORMATS.has(value));
@@ -99,8 +115,8 @@ export async function saveCourseAction(_previousState, formData) {
   if (id && (!Number.isSafeInteger(numericId) || numericId <= 0)) {
     return { error: 'That course could not be found.' };
   }
-  if (!title || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
-    return { error: 'Add a course title and a URL slug using lowercase letters, numbers and hyphens.' };
+  if (!title || !slugify(title)) {
+    return { error: 'Add a course title with at least one letter or number.' };
   }
   if (!trackKey || !formats.length || !delivery.length || !duration || !classes || !certificate) {
     return { error: 'Choose a track, at least one format and schedule, and complete the course details.' };
@@ -111,9 +127,9 @@ export async function saveCourseAction(_previousState, formData) {
 
   const client = await pool.connect();
   let savedCourse;
+  let previousSlug = '';
   try {
     await client.query('begin');
-
     if (numericId) {
       const existing = await client.query(
         'select id, slug from academy_courses where id = $1 for update',
@@ -123,20 +139,36 @@ export async function saveCourseAction(_previousState, formData) {
         await client.query('rollback');
         return { error: 'That course could not be found.' };
       }
-      if (existing.rows[0].slug !== slug) {
-        await client.query('rollback');
-        return { error: 'The course URL is fixed after creation so enrolment and search links stay valid.' };
+      previousSlug = existing.rows[0].slug;
+    }
+    const slug = await uniqueCourseSlug(client, title, numericId);
+
+    if (numericId) {
+      if (previousSlug !== slug) {
+        await client.query(
+          `insert into academy_course_slug_history (slug, course_id)
+           values ($1, $2) on conflict (slug) do nothing`,
+          [previousSlug, numericId],
+        );
+        await client.query(
+          'delete from academy_course_slug_history where slug = $1 and course_id = $2',
+          [slug, numericId],
+        );
+        await client.query(
+          'update academy_coupons set course_slug = $2 where course_slug = $1',
+          [previousSlug, slug],
+        );
       }
 
       const result = await client.query(
         `update academy_courses
-         set number = $2, title = $3, track_key = $4, formats = $5, delivery = $6,
-             duration = $7, classes = $8, certificate = $9, description = $10,
-             outcome = $11, price_kobo = $12, icon = $13, image_url = $14,
-             is_active = $15, sort_order = $16, updated_at = now()
+         set slug = $2, number = $3, title = $4, track_key = $5, formats = $6, delivery = $7,
+             duration = $8, classes = $9, certificate = $10, description = $11,
+             outcome = $12, price_kobo = $13, icon = $14, image_url = $15,
+             is_active = $16, sort_order = $17, updated_at = now()
          where id = $1
          returning id, slug`,
-        [numericId, number, title, trackKey, formats, delivery, duration, classes, certificate,
+        [numericId, slug, number, title, trackKey, formats, delivery, duration, classes, certificate,
           description, outcome, priceKobo, icon, imageUrl, isActive, sortOrder],
       );
       savedCourse = result.rows[0];
@@ -174,6 +206,7 @@ export async function saveCourseAction(_previousState, formData) {
   }
 
   revalidatePath('/academy');
+  if (previousSlug && previousSlug !== savedCourse.slug) revalidatePath(`/academy/courses/${previousSlug}`);
   revalidatePath(`/academy/courses/${savedCourse.slug}`);
   revalidatePath('/sitemap.xml');
   revalidatePath('/admin/courses');
