@@ -16,6 +16,7 @@ export default async function sitemap() {
     '/about',
     '/services',
     '/academy',
+    '/raynovation',
     '/events',
     '/contact',
     '/tools/ray-seo-analyser',

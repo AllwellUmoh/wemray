@@ -10,7 +10,6 @@ const links = [
 const tail = [
   { label: 'Portfolio', to: '/portfolio' },
   { label: 'Events', to: '/events' },
-  { label: 'Ray Academy', to: '/academy' },
 ];
 
 export default function MobileMenuMarkup() {
@@ -42,6 +41,18 @@ export default function MobileMenuMarkup() {
           {link.label}
         </AppLink>
       ))}
+      <details className="mm-sv mm-academy">
+        <summary>
+          Academy
+          <svg className="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </summary>
+        <div>
+          <AppLink to="/academy">Overview</AppLink>
+          <AppLink to="/raynovation">Raynovation</AppLink>
+        </div>
+      </details>
       <Button to="/contact" variant="pur">
         Start a Conversation
       </Button>

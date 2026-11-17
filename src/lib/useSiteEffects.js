@@ -59,13 +59,13 @@ function initNav(signal) {
 }
 
 function initMenus(signal) {
-  const items = document.querySelectorAll('.has-mega');
+  const items = document.querySelectorAll('.has-mega, .has-academy');
   if (!items.length) return;
 
   const controllers = [];
 
   items.forEach((item) => {
-    const trigger = item.querySelector('a');
+    const trigger = item.querySelector(':scope > a');
     if (!trigger) return;
     let timer;
 
@@ -82,6 +82,15 @@ function initMenus(signal) {
     };
 
     item.addEventListener('mouseenter', open, { signal });
+    item.addEventListener('focusin', open, { signal });
+    item.addEventListener(
+      'focusout',
+      (event) => {
+        if (item.contains(event.relatedTarget)) return;
+        timer = setTimeout(shut, 140);
+      },
+      { signal },
+    );
     item.addEventListener(
       'mouseleave',
       () => {
@@ -138,6 +147,7 @@ function initActiveNav(pathname) {
     const href = link.getAttribute('href');
     const active =
       href === normalized ||
+      (href === '/academy' && normalized.startsWith('/raynovation')) ||
       (href === '/services' && normalized.startsWith('/services/')) ||
       (href === '/tools/ray-seo-analyser' && normalized.startsWith('/tools'));
     link.classList.toggle('cur', active);

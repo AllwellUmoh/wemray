@@ -398,3 +398,108 @@ export async function sendInstalmentDue({ enrolment, course, amountKobo, dueDate
     ),
   });
 }
+
+/** Receipt for a Raynovation 1.0 application. */
+export async function sendRaynovationApplicationConfirmation({ application }) {
+  const firstName = escapeHtml(application.firstName);
+
+  return sendEmail({
+    to: application.email,
+    subject: `Raynovation 1.0 application received - ${application.reference}`,
+    replyTo: ADMIN_EMAIL,
+    text: [
+      `Hello ${application.firstName},`,
+      '',
+      'We have received your application for Raynovation 1.0.',
+      `Your application reference is ${application.reference}.`,
+      '',
+      'This message confirms receipt only. We will contact you if there are updates about the program.',
+      '',
+      'Wemray Technology',
+    ].join('\n'),
+    html: emailShell(
+      'Raynovation 1.0',
+      `Application received, ${firstName}.`,
+      `
+        <p style="margin:0 0 16px;line-height:1.6;color:#656590">
+          We have received your application for Raynovation 1.0.
+        </p>
+        ${summaryTable([
+          ['Application reference', application.reference],
+          ['Training track', application.trackLabel],
+        ])}
+        <p style="margin:0;line-height:1.6;color:#656590">
+          This message confirms receipt only. We will contact you if there are updates about the program.
+        </p>
+      `,
+    ),
+  });
+}
+
+/** Minimal notification; applicant contact details and answers stay in admin. */
+export async function sendRaynovationApplicationNotification({ application }) {
+  const adminLink = `${siteUrl()}/admin/raynovation-applications/${application.id}`;
+  const applicant = `${application.firstName} ${application.lastName}`;
+
+  return sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `New Raynovation application - ${application.reference}`,
+    text: [
+      'A new Raynovation 1.0 application was submitted.',
+      `Reference: ${application.reference}`,
+      `Applicant: ${applicant}`,
+      `Track: ${application.trackLabel}`,
+      '',
+      `Review the application: ${adminLink}`,
+    ].join('\n'),
+    html: emailShell(
+      'New Raynovation Application',
+      escapeHtml(applicant),
+      `
+        ${summaryTable([
+          ['Reference', application.reference],
+          ['Training track', application.trackLabel],
+        ])}
+        <p style="margin:0"><a href="${escapeHtml(adminLink)}" style="display:inline-block;background:#5125d2;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:700">Review application</a></p>
+      `,
+    ),
+  });
+}
+
+/** Sent after an administrator accepts an applicant for the scholarship program. */
+export async function sendRaynovationAcceptance({ application }) {
+  const firstName = escapeHtml(application.firstName);
+
+  return sendEmail({
+    to: application.email,
+    subject: `You have been accepted to Raynovation 1.0 - ${application.reference}`,
+    replyTo: ADMIN_EMAIL,
+    text: [
+      `Hello ${application.firstName},`,
+      '',
+      'Congratulations. Your application has been accepted for the Raynovation 1.0 scholarship program.',
+      `Application reference: ${application.reference}`,
+      `Training track: ${application.trackLabel}`,
+      '',
+      'The Raynovation team will send you the next steps and program information separately.',
+      '',
+      'Wemray Technology',
+    ].join('\n'),
+    html: emailShell(
+      'Raynovation 1.0 Scholarship',
+      `Congratulations, ${firstName}.`,
+      `
+        <p style="margin:0 0 16px;line-height:1.6;color:#656590">
+          Your application has been accepted for the Raynovation 1.0 scholarship program.
+        </p>
+        ${summaryTable([
+          ['Application reference', application.reference],
+          ['Training track', application.trackLabel],
+        ])}
+        <p style="margin:0;line-height:1.6;color:#656590">
+          The Raynovation team will send you the next steps and program information separately.
+        </p>
+      `,
+    ),
+  });
+}

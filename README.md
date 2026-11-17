@@ -64,6 +64,7 @@ marketing site, contact enquiries, and a passwordless admin area.
    psql "$DATABASE_URL" -f db/seo-analyzer.sql
    psql "$DATABASE_URL" -f db/academy.sql
    psql "$DATABASE_URL" -f db/academy.seed.sql
+   psql "$DATABASE_URL" -f db/raynovation-applications.sql
    psql "$DATABASE_URL" -f db/academy.events.sql
    ```
 

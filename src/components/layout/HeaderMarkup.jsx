@@ -30,7 +30,15 @@ export default function HeaderMarkup() {
         </li>
         <li><AppLink to="/portfolio">Portfolio</AppLink></li>
         <li><AppLink to="/events">Events</AppLink></li>
-        <li><AppLink to="/academy">Ray Academy</AppLink></li>
+        <li className="has-academy">
+          <AppLink to="/academy" aria-haspopup="true" aria-expanded="false" aria-controls="academy-menu">
+            Academy <svg className="chv" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+          </AppLink>
+          <div className="academy-menu" id="academy-menu" aria-label="Academy pages">
+            <AppLink to="/academy"><span><b>Overview</b><small>Explore all Academy courses and learning options.</small></span></AppLink>
+            <AppLink to="/raynovation"><span><b>Raynovation</b><small>A special training program starting February 1, 2027.</small></span></AppLink>
+          </div>
+        </li>
       </ul>
       <Button to="/contact" variant="pur">Start a Conversation</Button>
       <button className="burger" id="burger" aria-label="Menu" aria-expanded="false"><i /><i /><i /></button>

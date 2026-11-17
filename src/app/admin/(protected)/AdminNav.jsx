@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const LINKS = [
   { href: '/admin', label: 'Enquiries', exact: true },
   { href: '/admin/enrolments', label: 'Enrolments' },
+  { href: '/admin/raynovation-applications', label: 'Raynovation Applications' },
   { href: '/admin/courses', label: 'Courses' },
   { href: '/admin/tracks', label: 'Tracks' },
   { href: '/admin/events', label: 'Events' },
