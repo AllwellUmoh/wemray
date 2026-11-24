@@ -59,8 +59,7 @@ export default function HomeHero() {
           </span>
         </h1>
         <p className="sub">
-          We design and build digital products, platforms and experiences for ambitious businesses in Port Harcourt,
-          Lagos, Nigeria, London, the UK and Canada.
+          We design and build digital products, platforms and experiences for ambitious businesses ready to grow.
         </p>
         <div className="ctas">
           <Button to="/contact" variant="lav" arrow>Start a Conversation</Button>

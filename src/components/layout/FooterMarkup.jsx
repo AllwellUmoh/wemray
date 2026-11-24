@@ -10,7 +10,7 @@ export default function FooterMarkup() {
             <AppLink className="ft-logo" href="#top" aria-label="Wemray Technology home"><img src="/logo.png" alt="" /><span>WEMRAY</span></AppLink>
             <p>We build brands people remember, digital products people value, and intelligent systems that move businesses forward.</p>
             <p className="ft-areas">Port Harcourt | Lagos | Nigeria | London, UK | Canada</p>
-            <AppLink className="ft-cta" href="contact.html">Start a Conversation <svg className="arr" viewBox="0 0 24 24"><path d="M4 12h16M13 5l7 7-7 7" /></svg></AppLink>
+            <AppLink className="ft-cta btn lav" href="contact.html">Start a Conversation <svg className="arr" viewBox="0 0 24 24"><path d="M4 12h16M13 5l7 7-7 7" /></svg></AppLink>
           </div>
           <div className="ft-cols">
             <div className="fcol" style={{'--d': '.1s'}}><h4>Explore</h4><ul><li><AppLink href="index.html">Home</AppLink></li><li><AppLink href="about.html">About</AppLink></li><li><AppLink href="services.html">Services</AppLink></li><li><AppLink to="/portfolio">Portfolio</AppLink></li><li><AppLink to="/academy">Ray Academy</AppLink></li><li><AppLink to="/tools/ray-seo-analyser">SEO Analyser</AppLink></li><li><AppLink to="/contact">Contact</AppLink></li></ul></div>

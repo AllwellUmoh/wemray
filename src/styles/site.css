@@ -1,4 +1,6 @@
 
+@import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+
 /* ============ Wemray brand tokens (from logo) ============ */
 :root{
   --navy:#000066;       /* logo navy */
@@ -336,8 +338,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   .cap{height:calc(380vh + 2*var(--sp2))}
   .hc{grid-template-columns:1fr;grid-template-rows:auto 1fr;padding:18px}
   .deck{width:100%;aspect-ratio:auto;height:min(500px,calc(100svh - 270px));margin-top:0}
-  .stepper{position:relative;left:auto;top:auto;display:flex;gap:4px;margin-bottom:12px;--sq:30px}
-  .stepper span:nth-child(n){grid-column:auto}
+  .stepper{display:none}
   .stage{top:calc(100px + 22vh)}
   .how .tt{font-size:clamp(24px,8vw,36px);max-width:none}
   .how .hl{top:92px}
@@ -631,9 +632,28 @@ body{background:#e6e2f6}
 .ft-logo img{height:clamp(30px,2.5vw,38px);width:auto}
 .ft-brand p{margin:1.3rem 0 1.7rem;max-width:30em;color:#aeb0dc;font-size:clamp(14px,1vw,16px);line-height:1.7}
 .ft-areas{margin:-.6rem 0 1.7rem!important;max-width:34em!important;font:600 11px/1.7 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:#8f93dc!important}
-.ft-cta{display:inline-flex;align-items:center;gap:.7em;padding:.95em 1.5em;border-radius:999px;background:var(--lav);color:#0a0a50;font:600 .9rem/1 var(--f-body);transition:gap .25s,background .25s}
+.ft-cta{display:inline-flex;align-items:center;gap:.7em;padding:.95em 1.35em;border-radius:8px;background:var(--lav);color:var(--navy);font:600 .95rem/1 var(--f-body);box-shadow:0 8px 22px rgba(139,108,255,.3);transition:gap .25s,background .25s}
 .ft-cta:hover{gap:1.1em;background:#fff}
 .ft-cta .arr{width:1.1em;height:1.1em;fill:none;stroke:currentColor;stroke-width:2}
+@media(max-width:900px){.ft-cta{display:none}}
+
+/* Keep every Blueprint stage in normal page flow on narrow screens. */
+@media(max-width:900px){
+  .how{height:auto!important;padding:clamp(48px,8vw,76px) 0}
+  .how .stk{position:relative;top:auto;height:auto;min-height:0;overflow:visible}
+  .how .hl{position:relative;left:auto;top:auto;padding:0 var(--gut);margin-bottom:24px}
+  .how .tt small{display:block;max-width:32em}
+  .stage{position:relative;left:auto;right:auto;top:auto;padding:0 var(--gut)}
+  .stepper{position:relative;left:auto;top:auto;display:flex;gap:4px;margin-bottom:12px;--sq:30px}
+  .stepper span:nth-child(n){grid-column:auto}
+  .deck{display:grid;grid-template-columns:1fr;gap:14px;width:100%;height:auto;aspect-ratio:auto;margin:0;overflow:visible;clip-path:none}
+  .hc{position:relative;inset:auto;grid-template-columns:minmax(0,1fr) minmax(110px,32%);grid-template-rows:auto;align-items:center;min-height:250px;padding:clamp(16px,3vw,24px);transform:none!important;visibility:visible!important}
+  .hc .hic{grid-column:2;grid-row:1;width:100%;max-width:220px;min-width:0;justify-self:end}
+}
+@media(max-width:560px){
+  .hc{grid-template-columns:1fr;grid-template-rows:auto auto;gap:18px;min-height:0}
+  .hc .hic{grid-column:1;grid-row:2;width:min(100%,220px);justify-self:start}
+}
 .ft-cols{display:grid;grid-template-columns:.8fr 1.2fr 1.2fr;gap:clamp(24px,3.4vw,64px)}
 .fcol{opacity:.3;transform:translateY(16px);transition:opacity .8s var(--d,0s),transform .9s var(--d,0s)}
 #ftg.on .fcol{opacity:1;transform:none}

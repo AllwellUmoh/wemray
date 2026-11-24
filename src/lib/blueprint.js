@@ -95,8 +95,19 @@ export function initBlueprint(signal) {
   }
 
   let ticking = false;
+  const mobileLayout = matchMedia('(max-width: 900px)');
   function update() {
     ticking = false;
+    if (mobileLayout.matches) {
+      cards.forEach((card) => {
+        card.style.transform = 'none';
+        card.style.visibility = 'visible';
+        card.classList.add('go');
+      });
+      steps.forEach((step, index) => step.classList.toggle('on', index === 0));
+      return;
+    }
+
     const progress = sectionProgress(how);
     const scaled = clamp((progress - 0.05) / 0.88) * (cards.length - 1);
     const eased = [1];
